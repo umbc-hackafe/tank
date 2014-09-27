@@ -108,8 +108,8 @@ class TankSerial(object):
   def drive(self, speed, steer):
     speed = min(max(-1, speed), 1)
     
-    left_motor = min(max(speed + 2 * steer, -1), 1)
-    right_motor = min(max(speed + -2 * steer, -1), 1)
+    left_motor = min(max(speed + steer, -1), 1)
+    right_motor = min(max(speed - steer, -1), 1)
     self.left_tread.set_speed(left_motor)
     self.right_tread.set_speed(right_motor)
 
