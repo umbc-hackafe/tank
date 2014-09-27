@@ -1,3 +1,4 @@
+from __future__ import division
 import sys, time
 cwiid = None
 
@@ -30,6 +31,12 @@ def get_wiimote():
 
     return wm
 
+REST = (117, 130)
+MIN = (22, 33)
+MAX = (215, 227)
+THRESHOLD = 10
+GRANULARITY = 5
+
 def main(args):
     imports()
 
@@ -38,18 +45,31 @@ def main(args):
     position = (0, 0)
 
     print("Press Home to exit.")
+    last = None
+
     while True:
         if (wm.state['buttons'] & cwiid.BTN_HOME) > 0:
             break
 
         # Print nunchuck values if appropriate.
-        if 'nunchuk' in wm.state \
-                and wm.state['nunchuk']['buttons'] & cwiid.NUNCHUK_BTN_Z > 0:
-            joystick = wm.state['nunchuk']['stick']
-            move = joystick[0] - 118, joystick[1] - 132
-            position = position[0] + move[0], position[1] + move[1]
+        if 'nunchuk' in wm.state:
+            position = wm.state['nunchuk']['stick']
+            x, y = position
+            if abs(x - REST[0]) > THRESHOLD:
+                steer = max(min((x - REST[0]) / (MAX[0] - REST[0]), 1), -1)
+            else:
+                steer = 0
 
-        print(position)
+            if abs(y - REST[1]) > THRESHOLD:
+                speed = max(min((y - REST[1]) / (MAX[1] - REST[1]), 1), -1)
+            else:
+                speed = 0
+
+            movement = (steer, speed)
+
+        if movement != last:
+            print(movement)
+            last = movement
 
     wm.led = 15
     wm.rumble = True
