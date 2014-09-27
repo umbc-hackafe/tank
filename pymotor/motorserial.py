@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import collections
 from xmlrpc import server as xrpcserve
 import serial
 import sys
+import threading
 
 DEFAULT_SERIAL = "/dev/ttyACM0"
 
@@ -15,6 +17,9 @@ LEFT_TREAD_ID = "l"
 RIGHT_TREAD_ID = "r"
 TURRET_ID = "t"
 
+PYROELECTRIC_SENSOR = "p"
+INFARED_SENSOR = "i"
+
 def main(argv):
   parser = argparse.ArgumentParser()
   parser.add_argument("--serial-port", "-s", help="The path to the serial port to connect to", type=str, nargs="?",
@@ -26,12 +31,30 @@ def main(argv):
   server.register_introspection_functions()
 
   with TankSerial(args.serial_port) as tank:
+    ping_event = threading.Event()
+    def ping():
+      ping_event.set()
+    server.register_function(ping)
+    rpc_timeout_thread = threading.Thread(target=rpc_timeout, args=(ping_event, tank), daemon=True)
+    rpc_timeout_thread.start()
     server.register_function(print)
     server.register_instance(tank, allow_dotted_names=True)
     server.serve_forever()
 
+
 class RequestHandler(xrpcserve.SimpleXMLRPCRequestHandler):
   rpc_paths = ("/TANK",)
+
+
+def rpc_timeout(event, tank):
+  while tank.is_active():
+    if not event.wait(timeout=5.0) and tank.is_active():
+      tank.left_tread.brake()
+      tank.right_tread.brake()
+      tank.turret.brake()
+    else:
+      event.clear()
+  
 
 class TankSerial(object):
 
@@ -41,12 +64,43 @@ class TankSerial(object):
     self.right_tread = Motor(RIGHT_TREAD_ID, self.serial)
     self.turret = Motor(TURRET_ID, self.serial)
 
+    self.pyro_sensors = collections.defaultdict(threading.Event)
+    self.pyro_lock = threading.Lock()
+    self.ir_sensors = collections.defaultdict(threading.Event)
+    self.ir_lock = threading.Lock()
+    self.sensor_monitor_thread = threading.Thread(target=self.sensor_monitor, daemon=True)
+    self.sensor_monitor_thread.start()
+
   def __enter__(self):
     return self
 
   def __exit__(self, type, value, traceback):
     if self.serial.isOpen():
       self.serial.close()
+
+  def is_active(self):
+    return self.serial.isOpen()
+
+  def sensor_monitor(self):
+    while self.serial.isOpen():
+      sensor_type, identifier = self.serial.read(2).decode("utf-8")
+
+      if sensor_type == PYROELECTRIC_SENSOR:
+        value = bool(self.serial.read(1)[0])
+        with self.pyro_lock:
+          if value:
+            self.pyro_sensors[identifier].set()
+          else:
+            self.pyro_sensors[identifier].clear()
+      elif sensor_type == INFARED_SENSOR:
+        value = bool(self.serial.read(1)[0])
+        with self.ir_lock:
+          if value:
+            self.ir_sensors[identifier].set()
+          else:
+            self.ir_sensors[identifier].clear()
+      else:
+        print("Invalid sensor type:", sensor_type)
 
   def drive(self, speed, steer):
     speed = min(max(-1, speed), 1)
@@ -55,7 +109,17 @@ class TankSerial(object):
     right_motor = min(max(speed + -2 * steer, -1), 1)
     self.left_tread.set_speed(left_motor)
     self.right_tread.set_speed(right_motor)
+
+  def center_turret(self):
+    with self.ir_lock:
+      event = self.ir_sensors['c']
+
+    if not event.is_set():
+      self.turret.set_speed(1)
+      event.wait(20.0)
+      self.turret.brake()
     
+
 class Motor(object):
   def __init__(self, serial_id, serial):
     self.serial_id = serial_id
