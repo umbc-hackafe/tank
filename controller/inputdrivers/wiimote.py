@@ -37,7 +37,7 @@ MAX = (215, 227)
 THRESHOLD = 10
 GRANULARITY = 5
 
-def main(args):
+def main(client, args):
     imports()
 
     wm = get_wiimote()

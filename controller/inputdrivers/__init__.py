@@ -24,9 +24,9 @@ def load(path):
             print("Skipping module {}: {}".format(name, e))
 
 
-def run(inputdriver, args=[]):
+def run(inputdriver, client, args=[]):
     if inputdriver in all:
-        all[inputdriver](args)
+        all[inputdriver](client, args)
     else:
         raise NoDriverInModuleException("No main in %s" % inputdriver)
 
