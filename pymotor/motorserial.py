@@ -16,6 +16,7 @@ RESUME_SPEED_COMMAND = "r"
 LEFT_TREAD_ID = "l"
 RIGHT_TREAD_ID = "r"
 TURRET_ID = "t"
+GUN_ID = "g"
 
 PYROELECTRIC_SENSOR = "p"
 INFARED_SENSOR = "i"
@@ -52,6 +53,7 @@ def rpc_timeout(event, tank):
       tank.left_tread.brake()
       tank.right_tread.brake()
       tank.turret.brake()
+      tank.gun.brake()
     else:
       event.clear()
   
@@ -63,6 +65,7 @@ class TankSerial(object):
     self.left_tread = Motor(LEFT_TREAD_ID, self.serial)
     self.right_tread = Motor(RIGHT_TREAD_ID, self.serial)
     self.turret = Motor(TURRET_ID, self.serial)
+    self.gun = Motor(GUN_ID, self.serial)
 
     self.pyro_sensors = collections.defaultdict(threading.Event)
     self.pyro_lock = threading.Lock()
