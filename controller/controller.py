@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-import sys, argparse
+import sys, time, argparse, threading
 try:
     import xmlrpclib as xmlrpcclient
 except ImportError:
@@ -17,6 +17,17 @@ def parse(raw_args):
 
 def main(args):
     client = xmlrpcclient.ServerProxy(args.remote)
+
+    # Set up a thread to ping the RPC server constantly. If it drops for
+    # more than 5 seconds, all of the motors will brake.
+    def client_ping():
+        while True:
+            client.ping()
+            time.sleep(1)
+
+    client_pinger = threading.Thread(group=None, target=client_ping)
+    client_pinger.daemon = True
+    client_pinger.start()
 
     if args.inputdriver in inputdrivers.all:
         inputdrivers.run(args.inputdriver, client)
