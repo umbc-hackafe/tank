@@ -101,7 +101,7 @@ def main(client, args):
 
         if 'nunchuk' in wm.state:
             if wm.state['nunchuk']['buttons'] & cwiid.NUNCHUK_BTN_Z:
-                gunspeed = 0.5
+                gunspeed = 1
             elif wm.state['nunchuk']['buttons'] & cwiid.NUNCHUK_BTN_C:
                 gunspeed = 1
             else:
