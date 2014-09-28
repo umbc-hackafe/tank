@@ -11,9 +11,14 @@ import inputdrivers
 
 def parse(raw_args):
     parser = argparse.ArgumentParser()
-    parser.add_argument("inputdriver", choices=inputdrivers.all.keys())
+    parser.add_argument("inputdriver",
+        help="Name of the preferred input method",
+        choices=inputdrivers.all.keys())
     parser.add_argument("--remote", "--rpc", "-r", type=str,
+            help="full URL of an RPC server",
             default="http://localhost:1411/TANK")
+    parser.add_argument("--continuous", "-c", action='store_true',
+            help="retry the input driver if it fails")
     return parser.parse_args(raw_args)
 
 def main(args):
@@ -30,9 +35,17 @@ def main(args):
     client_pinger.daemon = True
     client_pinger.start()
 
-    if args.inputdriver in inputdrivers.all:
-        #client.print("Joining client via %s" % args.inputdriver)
-        inputdrivers.run(args.inputdriver, client)
+    while True:
+        if args.inputdriver in inputdrivers.all:
+            #client.print("Joining client via %s" % args.inputdriver)
+            inputdrivers.run(args.inputdriver, client)
+
+        print("Lost input method. Halting tank.")
+
+        if not args.continuous:
+            break
+        else:
+            print("Retrying input method.")
 
 if __name__ == "__main__":
     main(parse(sys.argv[1:]))
