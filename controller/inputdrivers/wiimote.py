@@ -11,7 +11,7 @@ def imports():
         print("Could not import cwiid. Is the package installed? Are you using python2?")
         sys.exit(1)
 
-def get_wiimote():
+def get_wiimote(require_nunchuk = False):
     print("Press 1+2 on your Wiimote to connect...")
     wm = None
     while(wm == None):
@@ -27,6 +27,14 @@ def get_wiimote():
     wm.rumble = True
     time.sleep(0.25)
     wm.rumble = False
+
+    if require_nunchuk and 'nunchuk' not in wm.state:
+        print("Please connect a Nunchuk.", end=" ")
+        led = 0
+        while 'nunchuk' not in wm.state: time.sleep(0.25)
+
+        print("OK")
+
     time.sleep(0.25)
     wm.led = 1
 
@@ -41,7 +49,7 @@ JOY_GRANULARITY = 5
 def main(client, args):
     imports()
 
-    wm = get_wiimote()
+    wm = get_wiimote(require_nunchuk = True)
 
     position = (0, 0)
 
@@ -69,10 +77,13 @@ def main(client, args):
             else:
                 speed = 0
 
-            movement = (steer, speed)
+            movement = (speed, steer)
+
+        else:
+            movement = (0, 0)
 
         if movement != last:
-            print(movement)
+            client.drive(*movement)
             last = movement
 
     wm.led = 15
