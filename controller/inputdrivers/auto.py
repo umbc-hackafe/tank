@@ -29,6 +29,9 @@ def main(client, args):
     user.register_user_cb(target_detected, target_lost)
     ctx.start_generating_all()
 
+    last_gunstate = 0
+    last_turretcorrect = 0
+
     while True:
         ctx.wait_and_update_all()
 
@@ -52,10 +55,25 @@ def main(client, args):
         nearness.sort(key=lambda pair: abs(pair[1]))
         target_x = nearness[0][1]
 
-        if abs(target_x) < 50:
+        if abs(target_x) < 100:
             print("FIRE")
-
-        if target_x < 0:
-            print("left")
+            gunstate = 1
         else:
-            print("right")
+            gunstate = 0
+
+        if gunstate != last_gunstate:
+            with client.lock:
+                client.gun.set_speed(gunstate)
+                last_gunstate = gunstate
+
+        if target_x < -10:
+            turretcorrect = 1
+        elif target_x > 10:
+            turretcorrect = -1
+        else:
+            turretcorrect = 0
+
+        if turretcorrect != last_turretcorrect:
+            with client.lock:
+                client.turret.set_speed(turretcorrect)
+                last_turretcorrect = turretcorrect
