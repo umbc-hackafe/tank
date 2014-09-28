@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
-
+from __future__ import print_function
 import sys, time, argparse, threading
+
 try:
     import xmlrpclib as xmlrpcclient
 except ImportError:
@@ -30,6 +31,7 @@ def main(args):
     client_pinger.start()
 
     if args.inputdriver in inputdrivers.all:
+        #client.print("Joining client via %s" % args.inputdriver)
         inputdrivers.run(args.inputdriver, client)
 
 if __name__ == "__main__":
