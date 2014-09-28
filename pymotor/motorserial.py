@@ -31,6 +31,7 @@ def main(argv):
                       default=DEFAULT_SERIAL)
   parser.add_argument("--port", "-p", help="Port for the RPC Server", type=int, nargs="?", default=1411)
   parser.add_argument("--audio", "-a", help="Should audio be played by this instance.", action="store_true")
+  parser.add_argument("--no-ping", "-n", action="store_false")
   args = parser.parse_args()
 
   server = xrpcserve.SimpleXMLRPCServer(("localhost", args.port), requestHandler=RequestHandler, allow_none=True)
@@ -38,12 +39,13 @@ def main(argv):
 
   with TankSerial(args.serial_port) as tank:
     # Handle the pinging
-    ping_event = threading.Event()
-    def ping():
-      ping_event.set()
-    server.register_function(ping)
-    rpc_timeout_thread = threading.Thread(target=rpc_timeout, args=(ping_event, tank), daemon=True)
-    rpc_timeout_thread.start()
+    if args.no_ping:
+      ping_event = threading.Event()
+      def ping():
+        ping_event.set()
+      server.register_function(ping)
+      rpc_timeout_thread = threading.Thread(target=rpc_timeout, args=(ping_event, tank), daemon=True)
+      rpc_timeout_thread.start()
 
     server.register_function(print)
 
@@ -167,21 +169,25 @@ class Motor(object):
     speed = min(max(-1, speed), 1)
     speed = int(speed * (2**7 - 1))
     command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big", signed=True)
+    assert(len(command) == 5)
     self.serial.write(command)
     print("Set Speed of motor", self.serial_id, "to:", speed)
 
   def freewheel(self):
-    command = FREEWHEEL_COMMAND + self.serial_id
+    command = FREEWHEEL_COMMAND + self.serial_id + b"\x00"
+    assert(len(command) == 5)
     self.serial.write(command)
     print("Now freewheeling on motor", self.serial_id)
 
   def brake(self):
-    command = BRAKE_COMMAND + self.serial_id
+    command = BRAKE_COMMAND + self.serial_id + b"\x00"
+    assert(len(command) == 5)
     self.serial.write(command)
     print("Now braking on motor", self.serial_id)
     
   def resume(self):
-    command = RESUME_SPEED_COMMAND + self.serial_id
+    command = RESUME_SPEED_COMMAND + self.serial_id + b"\x00"
+    assert(len(command) == 5)
     self.serial.write(command)
     print("Resuming old speed on motor", self.serial_id)
     
