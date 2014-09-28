@@ -17,10 +17,10 @@ FREEWHEEL_COMMAND = SENTINEL + b"f"
 BRAKE_COMMAND = SENTINEL + b"b"
 RESUME_SPEED_COMMAND = SENTINEL + b"r"
 
-LEFT_TREAD_ID = b"l"
-RIGHT_TREAD_ID = b"r"
-TURRET_ID = b"t"
-GUN_ID = b"g"
+LEFT_TREAD_ID = b"\x00"
+RIGHT_TREAD_ID = b"\x01"
+TURRET_ID = b"\x02"
+GUN_ID = b"\x03"
 
 PYROELECTRIC_SENSOR = b"p"
 INFARED_SENSOR = b"i"
@@ -90,7 +90,7 @@ class TankSerial(object):
 
   def __init__(self, serial_port):
     self.serial = serial.Serial(serial_port, 19200)
-    #self.serial.write = print
+#    self.serial.write = print
     self.left_tread = Motor(LEFT_TREAD_ID, self.serial)
     self.right_tread = Motor(RIGHT_TREAD_ID, self.serial)
     self.turret = Motor(TURRET_ID, self.serial)
