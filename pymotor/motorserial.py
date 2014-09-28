@@ -10,10 +10,12 @@ from xmlrpc import server as xrpcserve
 
 DEFAULT_SERIAL = "/dev/ttyACM0"
 
-SET_SPEED_COMMAND = "s"
-FREEWHEEL_COMMAND = "f"
-BRAKE_COMMAND = "b"
-RESUME_SPEED_COMMAND = "r"
+SENTINEL = "\xCA\xFE"
+
+SET_SPEED_COMMAND = SENTINEL + "s"
+FREEWHEEL_COMMAND = SENTINEL + "f"
+BRAKE_COMMAND = SENTINEL + "b"
+RESUME_SPEED_COMMAND = SENTINEL + "r"
 
 LEFT_TREAD_ID = "l"
 RIGHT_TREAD_ID = "r"
@@ -162,8 +164,8 @@ class Motor(object):
 
   def set_speed(self, speed):
     speed = min(max(-1, speed), 1)
-    speed = int(speed * (2**15 - 1))
-    command = bytearray(SET_SPEED_COMMAND + self.serial_id, encoding="utf-8") + speed.to_bytes(2, "little", signed=True)
+    speed = int(speed * (2**7 - 1))
+    command = bytearray(SET_SPEED_COMMAND + self.serial_id, encoding="utf-8") + speed.to_bytes(1, "big", signed=True)
     self.serial.write(command)
     print("Set Speed of motor", self.serial_id, "to:", speed)
 
