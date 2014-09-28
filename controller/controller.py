@@ -63,7 +63,7 @@ def main(args):
         while True:
             with client.lock:
                 client.ping()
-            time.sleep(1)
+            time.sleep(.25)
 
     client_pinger = threading.Thread(group=None, target=client_ping)
     client_pinger.daemon = True
