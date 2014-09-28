@@ -31,11 +31,11 @@ def get_wiimote():
 
     return wm
 
-REST = (117, 130)
-MIN = (22, 33)
-MAX = (215, 227)
-THRESHOLD = 10
-GRANULARITY = 5
+JOY_REST = (117, 130)
+JOY_MIN = (22, 33)
+JOY_MAX = (215, 227)
+JOY_THRESHOLD = 10
+JOY_GRANULARITY = 5
 
 def main(client, args):
     imports()
@@ -55,13 +55,13 @@ def main(client, args):
         if 'nunchuk' in wm.state:
             position = wm.state['nunchuk']['stick']
             x, y = position
-            if abs(x - REST[0]) > THRESHOLD:
-                steer = max(min((x - REST[0]) / (MAX[0] - REST[0]), 1), -1)
+            if abs(x - JOY_REST[0]) > JOY_THRESHOLD:
+                steer = max(min((x - JOY_REST[0]) / (JOY_MAX[0] - JOY_REST[0]), 1), -1)
             else:
                 steer = 0
 
-            if abs(y - REST[1]) > THRESHOLD:
-                speed = max(min((y - REST[1]) / (MAX[1] - REST[1]), 1), -1)
+            if abs(y - JOY_REST[1]) > JOY_THRESHOLD:
+                speed = max(min((y - JOY_REST[1]) / (JOY_MAX[1] - JOY_REST[1]), 1), -1)
             else:
                 speed = 0
 

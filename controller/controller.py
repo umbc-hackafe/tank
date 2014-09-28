@@ -41,6 +41,7 @@ def main(args):
             inputdrivers.run(args.inputdriver, client)
 
         print("Lost input method. Halting tank.")
+        client.halt()
 
         if not args.continuous:
             break
