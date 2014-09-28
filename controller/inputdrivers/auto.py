@@ -37,7 +37,13 @@ def main(client, args):
         for id in user.users:
             x, y, depth = tuple(user.get_com(id))
 
-            if not sum((x, y, depth)): continue
+            if not sum((x, y, depth)):
+                continue
+
+            if depth > 4000:
+                print("Target (%d) out of range")
+                continue
+
             nearness.append((id, x, y, depth))
 
         if len(nearness) == 0: continue
