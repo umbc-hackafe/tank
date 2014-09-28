@@ -46,6 +46,10 @@ def main(argv):
       server.register_function(ping)
       rpc_timeout_thread = threading.Thread(target=rpc_timeout, args=(ping_event, tank), daemon=True)
       rpc_timeout_thread.start()
+    else:
+      def ping():
+        pass
+      server.register_function(ping)
 
     server.register_function(print)
 
@@ -82,7 +86,7 @@ class RequestHandler(xrpcserve.SimpleXMLRPCRequestHandler):
 
 def rpc_timeout(event, tank):
   while tank.is_active():
-    if not event.wait(timeout=5.0) and tank.is_active():
+    if not event.wait(timeout=1.0) and tank.is_active():
       tank.halt()
     else:
       event.clear()
@@ -92,11 +96,12 @@ class TankSerial(object):
 
   def __init__(self, serial_port):
     self.serial = serial.Serial(serial_port, 19200)
+    self.serial_lock = threading.Lock()
 #    self.serial.write = print
-    self.left_tread = Motor(LEFT_TREAD_ID, self.serial)
-    self.right_tread = Motor(RIGHT_TREAD_ID, self.serial)
-    self.turret = Motor(TURRET_ID, self.serial)
-    self.gun = Motor(GUN_ID, self.serial)
+    self.left_tread = Motor(LEFT_TREAD_ID, self.serial, self.serial_lock)
+    self.right_tread = Motor(RIGHT_TREAD_ID, self.serial, self.serial_lock)
+    self.turret = Motor(TURRET_ID, self.serial, self.serial_lock)
+    self.gun = Motor(GUN_ID, self.serial, self.serial_lock)
 
     self.pyro_sensors = collections.defaultdict(threading.Event)
     self.pyro_lock = threading.Lock()
@@ -161,22 +166,25 @@ class TankSerial(object):
     
 
 class Motor(object):
-  def __init__(self, serial_id, serial):
+  def __init__(self, serial_id, serial, serial_lock):
     self.serial_id = serial_id
     self.serial = serial
+    self.serial_lock = serial_lock
 
   def set_speed(self, speed):
     speed = min(max(-1, speed), 1)
     speed = int(speed * (2**7 - 1))
     command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big", signed=True)
     assert(len(command) == 5)
-    self.serial.write(command)
+    with self.serial_lock:
+      self.serial.write(command)
     print("Set Speed of motor", self.serial_id, "to:", speed)
 
   def freewheel(self):
     command = FREEWHEEL_COMMAND + self.serial_id + b"\x00"
     assert(len(command) == 5)
-    self.serial.write(command)
+    with self.serial_lock:
+      self.serial.write(command)
     print("Now freewheeling on motor", self.serial_id)
 
   def brake(self):
@@ -188,7 +196,8 @@ class Motor(object):
   def resume(self):
     command = RESUME_SPEED_COMMAND + self.serial_id + b"\x00"
     assert(len(command) == 5)
-    self.serial.write(command)
+    with self.serial_lock:
+      self.serial.write(command)
     print("Resuming old speed on motor", self.serial_id)
     
 
