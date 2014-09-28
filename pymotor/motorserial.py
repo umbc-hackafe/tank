@@ -10,20 +10,20 @@ from xmlrpc import server as xrpcserve
 
 DEFAULT_SERIAL = "/dev/ttyACM0"
 
-SENTINEL = "\xCA\xFE"
+SENTINEL = b"\xCA\xFE"
 
-SET_SPEED_COMMAND = SENTINEL + "s"
-FREEWHEEL_COMMAND = SENTINEL + "f"
-BRAKE_COMMAND = SENTINEL + "b"
-RESUME_SPEED_COMMAND = SENTINEL + "r"
+SET_SPEED_COMMAND = SENTINEL + b"s"
+FREEWHEEL_COMMAND = SENTINEL + b"f"
+BRAKE_COMMAND = SENTINEL + b"b"
+RESUME_SPEED_COMMAND = SENTINEL + b"r"
 
-LEFT_TREAD_ID = "l"
-RIGHT_TREAD_ID = "r"
-TURRET_ID = "t"
-GUN_ID = "g"
+LEFT_TREAD_ID = b"l"
+RIGHT_TREAD_ID = b"r"
+TURRET_ID = b"t"
+GUN_ID = b"g"
 
-PYROELECTRIC_SENSOR = "p"
-INFARED_SENSOR = "i"
+PYROELECTRIC_SENSOR = b"p"
+INFARED_SENSOR = b"i"
 
 def main(argv):
   parser = argparse.ArgumentParser()
@@ -90,6 +90,7 @@ class TankSerial(object):
 
   def __init__(self, serial_port):
     self.serial = serial.Serial(serial_port, 19200)
+    #self.serial.write = print
     self.left_tread = Motor(LEFT_TREAD_ID, self.serial)
     self.right_tread = Motor(RIGHT_TREAD_ID, self.serial)
     self.turret = Motor(TURRET_ID, self.serial)
@@ -165,22 +166,22 @@ class Motor(object):
   def set_speed(self, speed):
     speed = min(max(-1, speed), 1)
     speed = int(speed * (2**7 - 1))
-    command = bytearray(SET_SPEED_COMMAND + self.serial_id, encoding="utf-8") + speed.to_bytes(1, "big", signed=True)
+    command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big", signed=True)
     self.serial.write(command)
     print("Set Speed of motor", self.serial_id, "to:", speed)
 
   def freewheel(self):
-    command = bytearray(FREEWHEEL_COMMAND + self.serial_id, encoding="utf-8")
+    command = FREEWHEEL_COMMAND + self.serial_id
     self.serial.write(command)
     print("Now freewheeling on motor", self.serial_id)
 
   def brake(self):
-    command = bytearray(BRAKE_COMMAND + self.serial_id, encoding="utf-8")
+    command = BRAKE_COMMAND + self.serial_id
     self.serial.write(command)
     print("Now braking on motor", self.serial_id)
     
   def resume(self):
-    command = bytearray(RESUME_SPEED_COMMAND + self.serial_id, encoding="utf-8")
+    command = RESUME_SPEED_COMMAND + self.serial_id
     self.serial.write(command)
     print("Resuming old speed on motor", self.serial_id)
     
