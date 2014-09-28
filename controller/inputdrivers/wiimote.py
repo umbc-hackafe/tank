@@ -53,7 +53,13 @@ def main(client, args):
 
     position = (0, 0)
 
-    print("Press Home to exit.")
+    print("Controls:")
+    print("\tHome:\t\texit")
+    print("\tStick:\t\tmove treads")
+    print("\tLeft/Right\tturn turret")
+    print("\tZ:\t\tfire")
+    print("\tC:\t\tmax fire")
+
     last = None
 
     while True:
