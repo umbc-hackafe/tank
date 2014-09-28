@@ -84,6 +84,8 @@ int reverseAt0L = 0;
 
 int rampTicks = 0;
 
+int stopped = 0;
+
 void sendNum(int data) {
   ringbuffer[bufferend] = data;
   bufferend++;
@@ -92,7 +94,7 @@ void sendNum(int data) {
   }
 }
 
-void getMotorId(int motorChar) {
+int getMotorId(int motorChar) {
   switch(motorChar) {
   case LEFT_TREAD_ID:
     return TREAD_L;
@@ -117,32 +119,32 @@ void setSpeed(int motor, int speed, int reverse) {
   int pwmPin = 0;
   int lowPin = 0;
 
-  switch(tread) {
-  case TREAD_R:
-    pinA = PIN_TREAD_R1;
-    pinB = PIN_TREAD_R2;
-    pinEnA = PIN_EN_R1;
-    pinEnB = PIN_EN_R2;
-    break;
+  switch(motor) {
+    case TREAD_R:
+      pinA = PIN_TREAD_R1;
+      pinB = PIN_TREAD_R2;
+      pinEnA = PIN_EN_R1;
+      pinEnB = PIN_EN_R2;
+      break;
 
-  case TREAD_L:
-    pinA = PIN_TREAD_L1;
-    pinB = PIN_TREAD_L2;
-    pinEnA = PIN_EN_L1;
-    pinEnB = PIN_EN_L2;
-    break;
+    case TREAD_L:
+      pinA = PIN_TREAD_L1;
+      pinB = PIN_TREAD_L2;
+      pinEnA = PIN_EN_L1;
+      pinEnB = PIN_EN_L2;
+      break;
 
-  case TURRET:
-    pinA = PIN_TURRET1;
-    pinB = PIN_TURRET2;
-    if (speed)
-      speed = PWM_MAX;
-    else
-      speed = 0;
-    break;
+    case TURRET:
+      pinA = PIN_TURRET1;
+      pinB = PIN_TURRET2;
+      if (speed)
+        speed = PWM_MAX;
+      else
+        speed = 0;
+      break;
 
-  default:
-    return;
+    default:
+      return;
   }
 
   if (speed == 0) {
@@ -157,35 +159,24 @@ void setSpeed(int motor, int speed, int reverse) {
     } else {
       pwmPin = pinA;
       lowPin = pinB;
-      int pinA = 0;
-      int pinB = 0;
-      int pinEnA = 0;
-      int pinEnB = 0;
-
-      int pwmPin = 0;
-      int lowPin = 0;
-
-      switch(tread) {
-      case TREAD_R:
-	pinA = PIN_TREAD_R1;
-	pinB = PIN_TREAD_R2;
-	pinEnA = PIN_EN_R1;
-	pinEnB = PIN_EN_R2;
     }
+    int pinA = 0;
+    int pinB = 0;
+    int pinEnA = 0;
+    int pinEnB = 0;
 
+    switch(motor) {
+      case TREAD_R:
+        pinA = PIN_TREAD_R1;
+        pinB = PIN_TREAD_R2;
+        pinEnA = PIN_EN_R1;
+        pinEnB = PIN_EN_R2;
+    }
     analogWrite(pwmPin, speed);
-    analogWrite(lowPin, 0);
-    digitalWriteFast(pinEnA, LOW);
-    digitalWriteFast(pinEnB, LOW);
+      analogWrite(lowPin, 0);
+      digitalWriteFast(pinEnA, LOW);
+      digitalWriteFast(pinEnB, LOW);
   }
-}
-
-void packet(int cmd, int motor, int data) {
-  sendNum(address);
-  sendNum(brightness);
-  sendNum(blue);
-  sendNum(green);
-  sendNum(red);
 }
 
 void initialize() {
@@ -241,28 +232,28 @@ extern "C" int main(void) {
 	reverseAt0R = 0;
       }
 
-      setSpeed(MOTOR_L, curSpeedL, directionL);
-      setSpeed(MOTOR_R, curSpeedR, directionR);
+      setSpeed(TREAD_L, curSpeedL, directionL);
+      setSpeed(TREAD_R, curSpeedR, directionR);
     }
 
-    if ((serialTimer.check() == 1) && (bufferstart == bufferend)) {
-      if (Serial.available()) {
-        if (serialend > 500) {
-          serialend = 0;
-        }
-        serialdata[serialend] = Serial.read();
+    if (Serial.available()) {
+      int data = Serial.read();
+      if (data == 0xCA) {
+        serialend = 0;
+      }
+      else {
+        serialdata[serialend] = data;
         serialend++;
       }
+    }
 
-      if (serialend >= 4 &&
-	  serialdata[serialend-4] == 0xCA &&
-	  serialdata[serialend-3] == 0xFE) {
-	int cmd = serialdata[serialend-2];
-	int motor = serialdata[serialend-1];
-	int data = serialdata[serialend];
-	int dir = FORWARD;
+    if (serialend >= 4 && serialdata[0] == 0xFE) {
+      int cmd = serialdata[1];
+      int motor = serialdata[2];
+      int data = serialdata[3];
+      int dir = FORWARD;
 
-	switch(cmd) {
+      switch(cmd) {
 	case SET_SPEED_COMMAND:
 	  if (data < 0) {
 	    data = -data;
@@ -292,7 +283,6 @@ extern "C" int main(void) {
 	  // set target speed to last speed
 	  // write to EN pin
 	  break;
-	}
       }
     }
   }
