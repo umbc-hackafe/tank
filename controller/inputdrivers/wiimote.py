@@ -62,6 +62,9 @@ def main(client, args):
 
     last = None
 
+    last_search = False
+    last_attack = False
+
     while True:
         buttons = wm.state['buttons']
         if buttons & cwiid.BTN_HOME > 0:
@@ -73,8 +76,6 @@ def main(client, args):
             turretspeed = -1
         else:
             turretspeed = 0
-
-        client.turret.set_speed(turretspeed)
 
         # Print nunchuck values if appropriate.
         if 'nunchuk' in wm.state:
@@ -97,10 +98,6 @@ def main(client, args):
         else:
             movement = (0, 0)
 
-        if movement != last:
-            client.drive(*movement)
-            last = movement
-
         if 'nunchuk' in wm.state:
             if wm.state['nunchuk']['buttons'] & cwiid.NUNCHUK_BTN_Z:
                 gunspeed = 0.5
@@ -112,7 +109,28 @@ def main(client, args):
         else:
             gunspeed = 0
 
-        client.gun.set_speed(gunspeed)
+        with client.lock:
+            if movement != last:
+                client.drive(*movement)
+                last = movement
+
+            client.turret.set_speed(turretspeed)
+
+
+            client.gun.set_speed(gunspeed)
+
+            if buttons & cwiid.BTN_A and not last_search:
+                last_search = True
+                client.play_sound("search")
+            elif not buttons & cwiid.BTN_A:
+                last_search = False
+
+            if buttons & cwiid.BTN_B and not last_attack:
+                last_attack = True
+                client.play_sound("attack")
+            elif not buttons & cwiid.BTN_B:
+                last_attack = False 
+
 
         # Only sample every centisecond.
         time.sleep(0.01)

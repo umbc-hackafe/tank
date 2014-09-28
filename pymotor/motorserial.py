@@ -51,7 +51,7 @@ def main(argv):
 
     # Run Audio
     audio_handler = AudioHandler(args.audio)
-    server.register_instance(audio_handler)
+    server.register_function(audio_handler.play_sound)
     
     server.serve_forever()
 
@@ -69,7 +69,7 @@ class AudioHandler(object):
     if not self.active:
       return
     sound = random.choice(self.files[category])
-    os.system("aplay {}".format(shlex.quote(sound)))
+    os.system("aplay {} &".format(shlex.quote(sound)))
 
 
 class RequestHandler(xrpcserve.SimpleXMLRPCRequestHandler):
