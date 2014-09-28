@@ -4,7 +4,6 @@ import collections
 import os
 import random
 import serial
-import shlex
 import sys
 import threading
 from xmlrpc import server as xrpcserve
@@ -60,6 +59,7 @@ class AudioHandler(object):
   files = {
     "attack": ["audio/Turret_turret_deploy_{}.wav".format(i) for i in range(1, 7)],
     "search": ["audio/Turret_turret_autosearch_{}.wav".format(i) for i in range(1, 7)],
+    "alarm": ["audio/Turret_alarm.wav " * 6],
   }
 
   def __init__(self, active):
@@ -69,7 +69,7 @@ class AudioHandler(object):
     if not self.active:
       return
     sound = random.choice(self.files[category])
-    os.system("aplay {} &".format(shlex.quote(sound)))
+    os.system("aplay {} &".format(sound))
 
 
 class RequestHandler(xrpcserve.SimpleXMLRPCRequestHandler):

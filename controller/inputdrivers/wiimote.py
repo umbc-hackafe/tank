@@ -64,6 +64,7 @@ def main(client, args):
 
     last_search = False
     last_attack = False
+    last_alarm = False
 
     while True:
         buttons = wm.state['buttons']
@@ -130,6 +131,12 @@ def main(client, args):
                 client.play_sound("attack")
             elif not buttons & cwiid.BTN_B:
                 last_attack = False 
+
+            if buttons & cwiid.BTN_1 and not last_alarm:
+                last_alarm = True
+                client.play_sound("alarm")
+            elif not buttons & cwiid.BTN_1:
+                last_alarm = False 
 
 
         # Only sample every centisecond.
