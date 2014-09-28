@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import argparse
 import collections
-from xmlrpc import server as xrpcserve
+import os
+import random
 import serial
+import shlex
 import sys
 import threading
+from xmlrpc import server as xrpcserve
 
 DEFAULT_SERIAL = "/dev/ttyACM0"
 
@@ -26,21 +29,47 @@ def main(argv):
   parser.add_argument("--serial-port", "-s", help="The path to the serial port to connect to", type=str, nargs="?",
                       default=DEFAULT_SERIAL)
   parser.add_argument("--port", "-p", help="Port for the RPC Server", type=int, nargs="?", default=1411)
+  parser.add_argument("--audio", "-a", help="Should audio be played by this instance.", action="store_true")
   args = parser.parse_args()
 
   server = xrpcserve.SimpleXMLRPCServer(("localhost", args.port), requestHandler=RequestHandler, allow_none=True)
   server.register_introspection_functions()
 
   with TankSerial(args.serial_port) as tank:
+    # Handle the pinging
     ping_event = threading.Event()
     def ping():
       ping_event.set()
     server.register_function(ping)
     rpc_timeout_thread = threading.Thread(target=rpc_timeout, args=(ping_event, tank), daemon=True)
     rpc_timeout_thread.start()
+
     server.register_function(print)
+
+    # Register everything from the tank
     server.register_instance(tank, allow_dotted_names=True)
+
+    # Run Audio
+    audio_handler = AudioHandler(args.audio)
+    server.register_instance(audio_handler)
+    
     server.serve_forever()
+
+
+class AudioHandler(object):
+  files = {
+    "attack": ["audio/Turret_turret_deploy_{}.wav".format(i) for i in range(1, 7)],
+    "search": ["audio/Turret_turret_autosearch_{}.wav".format(i) for i in range(1, 7)],
+  }
+
+  def __init__(self, active):
+    self.active = active
+
+  def play_sound(self, category):
+    if not self.active:
+      return
+    sound = random.choice(self.files[category])
+    os.system("aplay {}".format(shlex.quote(sound)))
 
 
 class RequestHandler(xrpcserve.SimpleXMLRPCRequestHandler):
