@@ -50,10 +50,7 @@ class RequestHandler(xrpcserve.SimpleXMLRPCRequestHandler):
 def rpc_timeout(event, tank):
   while tank.is_active():
     if not event.wait(timeout=5.0) and tank.is_active():
-      tank.left_tread.brake()
-      tank.right_tread.brake()
-      tank.turret.brake()
-      tank.gun.brake()
+      tank.halt()
     else:
       event.clear()
   
@@ -121,6 +118,12 @@ class TankSerial(object):
       self.turret.set_speed(1)
       event.wait(20.0)
       self.turret.brake()
+
+  def halt(self):
+    self.left_tread.brake()
+    self.right_tread.brake()
+    self.turret.brake()
+    self.gun.brake()
     
 
 class Motor(object):
