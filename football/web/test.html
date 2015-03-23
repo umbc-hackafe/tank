@@ -1,0 +1,200 @@
+
+<html>
+  <head>
+    <title>TANK CONTROL SYSTEM</title>
+    <style type="text/css">
+      body {
+      background-color: #6abd9e;
+      text-align: center;
+      }
+
+      * {
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 36pt;
+      text-transform: uppercase;
+      }
+
+      .redalert {
+      background-color: #670002;
+      }
+
+      .container {
+      text-align: center;
+      }
+
+      .container:before {
+      content: '';
+      display: inline-block;
+      height: 100%;
+      vertical-align: middle;
+      margin-right: -0.25em;
+      }
+
+      .box {
+      display: inline-block;
+      vertical-align: middle;
+      padding: 20px;
+      border: black 10px solid;
+      border-radius: 20px;
+      background-color: #25795a;
+      }
+
+      #passcode {
+      width: 4em;
+      }
+
+      #access-denied-box {
+      color: #9a2015;
+      }
+
+      #control-box {
+      text-align: left;
+      }
+
+      .control-set {
+      display: inline-block;
+      text-align: center;
+      margin: 10px;
+      padding: 5px;
+      border: 3px black solid;
+      border-radius: 4px;
+      }
+
+      .tread {
+      display: inline-block;
+      }
+
+      .light {
+      color: #ff0000;
+      }
+
+      .danger {
+      color: red;
+      background-image: repeating-linear-gradient(-45deg, black 0px, black 25px, yellow 25px, yellow 50px, black 50px);
+      }
+
+      #background-text {
+      text-transform: none;
+      font-size: 12pt;
+      text-align: left;
+      opacity: .9;
+      color: #00aa00;
+      position: absolute;
+      left: 0;
+      top: 0;
+      margin: 0px;
+      padding: 0px;
+      overflow: hidden;
+      height: 100%;
+      z-index: -1;
+      }
+      
+      .hidden {
+      display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="box" id="auth-box">
+	Enter Access Code
+	<form id="auth-form" action="#" method="post" onsubmit="return auth();">
+	  <input type="password" id="passcode" autofocus="autofocus" maxlength="6" placeholder=">"/>
+	  <input type="submit" value="Connect"/>
+	</form>
+      </div>
+      <div class="box hidden" id="access-granted-box">
+	Access Granted
+      </div>
+      <div class="box hidden" id="access-denied-box">
+	<span id="denied-text">Access Denied</span>
+      </div>
+      <div class="box hidden" id="control-box">
+	<form action="#" method="post" onsubmit="return false;">
+	  <input type="text" name="speech" id="speech" style="width: 6em;"/><input type="button" id="speech-button" value="Speak"/><br/>
+	  <div id="tread-controls" class="control-set">
+	    <emph>Treads</emph><br/>
+	    <div id="tread-controls-left" class="tread">
+	      <input type="button" id="left-tread-forward" value="&uarr;"/><br/>
+	      <input type="button" id="left-tread-reverse" value="&darr;"/>
+	    </div>
+	    <div id="tread-controls-right" class="tread">
+	      <input type="button" id="right-tread-forward" value="&uarr;"/><br/>
+	      <input type="button" id="right-tread-forward" value="&darr;"/>
+	    </div>
+	  </div>
+	  <div id="turret-controls" class="control-set danger" style="color: red;">
+	    Turret<br/>
+	    <input type="button" id="turret-fire" value="Fire" disabled="disabled" class="redalert"/><br/>
+	    <input type="button" id="turret-ccw" value="&larr;"/>
+	    <input type="button" id="turret-cw" value="&rarr;"/>
+	  </div>
+	  <br/>
+	  <div id="auto-controls" class="control-set" style="text-align: left;">
+	    <label><input type="checkbox" id="mode-track"/>Track Targets</input></label><br/>
+	    <label><input type="checkbox" id="mode-follow"/>Follow Targets</input></label><br/>
+	    <label class="danger"><input type="checkbox" id="mode-fire"/>Auto-Fire</label>
+	  </div>
+	  <br/>
+	  <input type="button" id="self-destruct" value="Self-Destruct" class="danger"/>
+	</form>
+      </div>
+    </div>
+    <pre id="background-text">
+      #include &lt;stdio.h&gt;
+      #include &lt;stdlib.h&gt;
+      int main(int argv, char **argv) {
+          printf("Hello world!");
+      }
+    </pre>
+    <script type="text/javascript">
+      function auth() {
+	  if (document.getElementById("passcode").value == "123456") {
+              console.log("OK");
+	      document.getElementById("auth-box").className += " hidden";
+              document.getElementById("access-granted-box").className = "box";
+              setTimeout(function() {
+                  document.getElementById("access-granted-box").className += " hidden";
+                  document.getElementById("control-box").className = "box";
+              }, 3000);
+          } else {
+              console.log("Not OK");
+	      document.getElementById("auth-box").className += " hidden";
+              document.getElementById("access-denied-box").className = "box";
+              document.body.className = "redalert";
+              setTimeout(function() {
+                  document.getElementById("auth-box").className = "box";
+                  document.getElementById("access-denied-box").className = "box hidden";
+                  document.body.className = "";
+              }, 3000);
+          }
+          return false;
+      }
+
+      function blink() {
+          var text = document.getElementById("denied-text");
+          if (text.className == "dark")
+              text.className = "light";
+          else
+              text.className = "dark";
+          setTimeout(function() {blink();}, 500);
+      }
+
+      function runText() {
+          var elm = document.getElementById("background-text")
+          if (elm.scrollTop + elm.offsetHeight >= elm.scrollHeight)
+              elm.scrollTop = 0;
+          else
+              elm.scrollTop += 40;
+          setTimeout(function(){runText();}, 40);
+      }
+
+      var source = document.body.innerHTML;
+      document.getElementById("background-text").appendChild(document.createTextNode(source));
+
+      setTimeout(function(){blink();}, 500);
+      setTimeout(function(){runText();}, 40);
+    </script>
+  </body>
+</html>
