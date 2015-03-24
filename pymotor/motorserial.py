@@ -25,6 +25,28 @@ GUN_ID = b"\x03"
 PYROELECTRIC_SENSOR = b"p"
 INFARED_SENSOR = b"i"
 
+def monkeypatch_serial():
+  import time
+  class FakeSerial:
+    def __init__(self, *args, **kwargs):
+      pass
+
+    def isOpen(self):
+      return True
+
+    def close(self):
+      pass
+
+    def read(self, num):
+      while True:
+        time.sleep(3600)
+      return None
+
+    def write(self, message):
+      print(str(message))
+
+  serial.Serial = FakeSerial
+
 def main(argv):
   parser = argparse.ArgumentParser()
   parser.add_argument("--serial-port", "-s", help="The path to the serial port to connect to", type=str, nargs="?",
@@ -32,7 +54,11 @@ def main(argv):
   parser.add_argument("--port", "-p", help="Port for the RPC Server", type=int, nargs="?", default=1411)
   parser.add_argument("--audio", "-a", help="Should audio be played by this instance.", action="store_true")
   parser.add_argument("--no-ping", "-n", action="store_false")
+  parser.add_argument("--dummy-serial", "-d", action="store_true")
   args = parser.parse_args()
+
+  if args.dummy_serial:
+    monkeypatch_serial()
 
   server = xrpcserve.SimpleXMLRPCServer(("localhost", args.port), requestHandler=RequestHandler, allow_none=True)
   server.register_introspection_functions()
