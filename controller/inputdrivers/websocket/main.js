@@ -24,8 +24,7 @@ $(function() {
     $("#control-form").submit(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
 
     $("#self-destruct").click(function() {
-	speak("Self-destruct sequence initiated.");
-	setTimeout(function(){countdown(30, function(){speak("Self-destruct canceled")});}, 1000);
+	speak("Self-destruct sequence initiated.", function(){countdown(30, function(){speak("Self-destruct canceled")});});
     });
 
     $(document).keydown(function(e) {
@@ -77,10 +76,10 @@ $(function() {
 });
 
 function countdown(time, cb) {
-    speak(''+time);
+    speak(time);
 
     if (time > 0) {
-	setTimeout(1000, function() {countdown(time-1);});
+	setTimeout(function() {countdown(time-1, cb);}, 1000);
     } else {
 	cb();
     }
