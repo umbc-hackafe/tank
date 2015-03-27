@@ -82,7 +82,7 @@ function countdown(time, min, cb) {
     speak(time);
 
     if (time > min) {
-	setTimeout(function() {countdown(time-1, cb);}, 1000);
+	setTimeout(function() {countdown(time-1, min, cb);}, 1000);
     } else {
 	setTimeout(cb, 1000);
     }
