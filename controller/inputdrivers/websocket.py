@@ -28,7 +28,7 @@ def main(client, args):
     imports()
 
     cherrypy.config.update({'server.socket_port': 80,
-                            'server.socket_host': 0.0.0.0})
+                            'server.socket_host': '0.0.0.0'})
     ws4py.server.cherrypyserver.WebSocketPlugin(cherrypy.engine).subscribe()
     cherrypy.tools.websocket = ws4py.server.cherrypyserver.WebSocketTool()
 
