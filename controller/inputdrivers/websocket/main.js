@@ -20,8 +20,8 @@ $(function() {
     $("#background-text").append(document.createTextNode($(document.body).html()));
     setTimeout(function(){runText();}, 40);
 
-    $("#speech-button").click(speak);
-    $("#control-form").submit(function(){speak(); return false;});
+    $("#speech-button").click(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
+    $("#control-form").submit(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
 
     $(document).keydown(function(e) {
 	switch(e.which) {
@@ -54,15 +54,15 @@ $(function() {
 	    break;
 
 	case 78: // N (button up)
-	    $.get("/sound", {name: "beep2"});
+	    sound("beep2");
 	    break;
 
 	case 76: // L (keyswitch ON)
-	    $.get("/sound", {name: "welcome"});
+	    sound("welcome");
 	    break;
 
 	case 85: // U (keyswitch OFF)
-	    $.get("/sound", {name: "shutdown"});
+	    sound("shutdown");
 	    break;
 	}
 
@@ -71,16 +71,20 @@ $(function() {
 	    
 });
 
-function speak() {
-    $.get("/speak", {"text": $("#speech").val()}, function() {
-	$("#speech").val('');
-    });
+function sound(name) {
+    $.get("/sound", {name: name});
+}
+
+function speak(text, cb) {
+    $.get("/speak", {"text": text}, cb);
 }
 
 function auth() {
     if ($("#passcode").val() == "1337") {
 	$("#auth-box").addClass('hidden');
 	$("#access-granted-box").removeClass('hidden');
+
+	speak("Access, Granted");
 
 	setTimeout(function() {
 	    $("#access-granted-box").addClass('hidden');
@@ -90,6 +94,8 @@ function auth() {
 	$("#auth-box").addClass('hidden');
 	$("#access-denied-box").removeClass('hidden');
 	$(document.body).addClass("redalert");
+
+	speak("Access, Denied");
 
 	blink($("#denied-text"), 500, 6);
 
