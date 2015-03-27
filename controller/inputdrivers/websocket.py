@@ -81,6 +81,12 @@ def main(client, args):
         def closed(self, code, reason=None):
             client.halt()
 
+    def espeak(text):
+        es = subprocess.Popen(["espeak", "--stdout", text], stdout=subprocess.PIPE)
+        ap = subprocess.Popen(["aplay", "-"], stdin=es.stdout, stdout=subprocess.PIPE)
+        es.stdout.close()
+        ap.communicate()
+
     class Root(object):
         @cherrypy.expose
         def index(self):
@@ -88,8 +94,7 @@ def main(client, args):
 
         @cherrypy.expose
         def speak(self, text='test'):
-            threading.Thread(target=lambda t:subprocess.call(['espeak', text]), args=(text,)).start()
-            return "ok"
+            threading.Thread(target=espeak, args=(text,)).start()
 
         @cherrypy.expose
         def sound(self, name='menu5'):
