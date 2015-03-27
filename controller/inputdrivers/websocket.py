@@ -91,6 +91,10 @@ def main(client, args):
             return "ok"
 
         @cherrypy.expose
+        def sound(self, name='menu5'):
+            threading.Thread(target=lambda n:subprocess.call(['aplay', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'websocket', 'sounds', n) + ".wav"]), args=(name,)).start()
+
+        @cherrypy.expose
         def ws(self):
             handler = cherrypy.request.ws_handler
 

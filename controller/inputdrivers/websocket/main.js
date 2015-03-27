@@ -19,7 +19,16 @@ $(function() {
 
     $("#background-text").append(document.createTextNode($(document.body).html()));
     setTimeout(function(){runText();}, 40);
+
+    $("#speech-button").click(speak);
+    $("#control-form").submit(function(){speak(); return false;});
 });
+
+function speak() {
+    $.get("/speak", {"text": $("#speech").val()}, function() {
+	$("#speech").val('');
+    });
+}
 
 function auth() {
     if ($("#passcode").val() == "1337") {

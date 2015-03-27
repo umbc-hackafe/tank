@@ -99,7 +99,7 @@
     <div class="container">
       <div class="box" id="auth-box">
 	Enter Access Code
-	<form id="auth-form" action="#" method="post" onsubmit="return auth();">
+	<form id="auth-form" action="#" method="post">
 	  <input type="password" id="passcode" autofocus="autofocus" maxlength="6" placeholder=">"/>
 	  <input type="submit" value="Connect"/>
 	</form>
@@ -111,7 +111,7 @@
 	<span id="denied-text">Access Denied</span>
       </div>
       <div class="box hidden" id="control-box">
-	<form action="#" method="post">
+	<form action="#" method="post" id="control-form">
 	  <input type="text" name="speech" id="speech" style="width: 6em;"/><input type="button" id="speech-button" value="Speak"/><br/>
 	  <div id="tread-controls" class="control-set">
 	    <emph>Treads</emph><br/>
