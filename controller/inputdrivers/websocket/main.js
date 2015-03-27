@@ -59,14 +59,14 @@ $(function() {
 
 	case 76: // L (keyswitch ON)
 	    $.get("/sound", {name: "welcome"});
-	    return;
+	    break;
 
 	case 85: // U (keyswitch OFF)
 	    $.get("/sound", {name: "shutdown"});
-	    return;
+	    break;
 	}
 
-	e.preventDefault();
+	//e.preventDefault();
     });
 	    
 });
