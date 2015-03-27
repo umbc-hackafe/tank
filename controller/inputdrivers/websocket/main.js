@@ -24,7 +24,7 @@ $(function() {
     $("#control-form").submit(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
 
     $("#self-destruct").click(function() {
-	speak("Self-destruct sequence initiated.", function(){countdown(30, function(){speak("Self-destruct canceled")});});
+	speak("Self-destruct sequence initiated.", function(){countdown(30, 1, function(){speak("Self-destruct aborted.")});});
     });
 
     $(document).keydown(function(e) {
@@ -72,16 +72,19 @@ $(function() {
 
 	//e.preventDefault();
     });
-	    
+
+    $(document).click(function() {
+	sound("select7");
+    });
 });
 
-function countdown(time, cb) {
+function countdown(time, min, cb) {
     speak(time);
 
-    if (time > 0) {
+    if (time > min) {
 	setTimeout(function() {countdown(time-1, cb);}, 1000);
     } else {
-	cb();
+	setTimeout(cb, 1000);
     }
 }
 
