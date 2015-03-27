@@ -23,7 +23,7 @@ $(function() {
     $("#speech-button").click(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
     $("#control-form").submit(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
 
-    $("#self-destruct").trigger(function() {
+    $("#self-destruct").click(function() {
 	speak("Self-destruct sequence initiated.");
 	setTimeout(function(){countdown(30, function(){speak("Self-destruct canceled")});}, 1000);
     });
