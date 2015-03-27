@@ -23,6 +23,11 @@ $(function() {
     $("#speech-button").click(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
     $("#control-form").submit(function(){speak($("#speech").val(), function(){$("#speech").val('');})});
 
+    $("#self-destruct").trigger(function() {
+	speak("Self-destruct sequence initiated.");
+	setTimeout(function(){countdown(30, function(){speak("Self-destruct canceled")});}, 1000);
+    });
+
     $(document).keydown(function(e) {
 	switch(e.which) {
 	case 37: // left
@@ -70,6 +75,16 @@ $(function() {
     });
 	    
 });
+
+function countdown(time, cb) {
+    speak(''+time);
+
+    if (time > 0) {
+	setTimeout(1000, function() {countdown(time-1);});
+    } else {
+	cb();
+    }
+}
 
 function sound(name) {
     $.get("/sound", {name: name});
