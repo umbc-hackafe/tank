@@ -22,6 +22,53 @@ $(function() {
 
     $("#speech-button").click(speak);
     $("#control-form").submit(function(){speak(); return false;});
+
+    $(document).keydown(function(e) {
+	switch(e.which) {
+	case 37: // left
+	case 38: // up
+	case 39: // right
+	case 40: // down
+	    return;
+
+	case 87: // W
+	case 65: // A
+	case 83: // S
+	case 68: // D
+	    return;
+
+	case 48: // 0
+	case 49: // 1
+	case 50: // 2
+	case 51: // 3
+	case 52: // 4
+	case 53: // 5
+	case 54: // 6
+	case 55: // 7
+	case 56: // 8
+	case 57: // 9
+	    return;
+
+	case 70: // F (button down)
+	    $("#turret-fire").click();
+	    break;
+
+	case 78: // N (button up)
+	    $.get("/sound", {name: "beep2"});
+	    break;
+
+	case 76: // L (keyswitch ON)
+	    $.get("/sound", {name: "welcome"});
+	    return;
+
+	case 85: // U (keyswitch OFF)
+	    $.get("/sound", {name: "shutdown"});
+	    return;
+	}
+
+	e.preventDefault();
+    });
+	    
 });
 
 function speak() {
