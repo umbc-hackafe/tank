@@ -89,7 +89,7 @@
       height: 100%;
       z-index: -1;
       }
-      
+
       .hidden {
       display: none;
       }
@@ -111,7 +111,7 @@
 	<span id="denied-text">Access Denied</span>
       </div>
       <div class="box hidden" id="control-box">
-	<form action="#" method="post" onsubmit="return false;">
+	<form action="#" method="post">
 	  <input type="text" name="speech" id="speech" style="width: 6em;"/><input type="button" id="speech-button" value="Speak"/><br/>
 	  <div id="tread-controls" class="control-set">
 	    <emph>Treads</emph><br/>
@@ -148,9 +148,22 @@
           printf("Hello world!");
       }
     </pre>
+    <script type="text/javascript" src="./jquery.js"></script>
+    <script type="text/javascript" src="./client.js"></script>
     <script type="text/javascript">
+      $(function() {
+      window.client = new Client(location.host, location.port, "/ws", function(){
+        console.log("ok");
+      });
+      setInterval(function() {
+        window.client.call("ping");
+      }, 500);
+      });
+    </script>
+    <script src="main.js"></script>
+    <!--<script type="text/javascript">
       function auth() {
-	  if (document.getElementById("passcode").value == "123456") {
+	  if (document.getElementById("passcode").value == "1337") {
               console.log("OK");
 	      document.getElementById("auth-box").className += " hidden";
               document.getElementById("access-granted-box").className = "box";
@@ -195,6 +208,6 @@
 
       setTimeout(function(){blink();}, 500);
       setTimeout(function(){runText();}, 40);
-    </script>
+    </script>-->
   </body>
 </html>

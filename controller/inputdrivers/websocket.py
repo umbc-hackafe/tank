@@ -1,5 +1,5 @@
 from __future__ import division, print_function
-import sys, time, threading, json
+import sys, time, threading, json, os, subprocess
 
 def imports():
     global cherrypy
@@ -10,7 +10,7 @@ def imports():
     import ws4py.websocket
 
 FILES = {
-    "index": "./inputdrivers/websocket.html"
+    "index": "./inputdrivers/websocket/index.html",
 }
 CACHE = {}
 MSG_TIMEOUT = 1.0
@@ -36,17 +36,21 @@ def main(client, args):
             tank.check_timeout()
             time.sleep(MSG_TIMEOUT/2)
 
-    class TankWebSocket(ws4py.websocket.EchoWebSocket):
+    class TankWebSocket(ws4py.websocket.WebSocket):
         def check_timeout(self):
             if time.time() - self.last_received > MSG_TIMEOUT:
-                client.halt()
+                try:
+                    client.halt()
+                except:
+                    print("a bad thing happened halting")
                 return False
             return True
 
         def received_message(self, message):
             self.last_received = time.time()
             action = json.loads(message.data)
-            path = action["target"].split(".")
+            seq = action.get("seq", -1)
+            path = action["op"].split(".")
             args = action.get("args", [])
             kwargs = action.get("kwargs", {})
 
@@ -61,13 +65,16 @@ def main(client, args):
                 try:
                     res = target(*args, **kwargs)
                     if res:
-                        self.send(json.dumps({"result": res}))
+                        try:
+                            self.send(json.dumps({"result": res, "seq": seq}))
+                        except TypeError:
+                            self.send(json.dumps({"result": None, "seq": seq}))
                 except RuntimeError as e:
-                    self.send(json.dumps({"error": e}))
+                    self.send(json.dumps({"error": str(e), "seq": seq}))
 
         def opened(self):
             self.last_received = time.time()
-            self.ping_waiter = Thread(target=timeout_thread, args=(self,))
+            self.ping_waiter = threading.Thread(target=timeout_thread, args=(self,))
             self.ping_waiter.start()
 
         def closed(self, code, reason=None):
@@ -79,9 +86,17 @@ def main(client, args):
             return get_content("index")
 
         @cherrypy.expose
+        def speak(self, text='test'):
+            threading.Thread(target=lambda t:subprocess.call(['espeak', text]), args=(text,)).start()
+            return "ok"
+
+        @cherrypy.expose
         def ws(self):
             handler = cherrypy.request.ws_handler
 
     cherrypy.quickstart(Root(), config={
         '/ws': {'tools.websocket.on': True,
-                'tools.websocket.handler_cls': TankWebSocket}})
+                'tools.websocket.handler_cls': TankWebSocket},
+        '/' : { 'tools.staticdir.root': os.path.dirname(os.path.abspath(__file__)),
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': 'websocket'}})
