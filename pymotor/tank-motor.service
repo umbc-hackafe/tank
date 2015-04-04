@@ -2,7 +2,7 @@
 Description=Hackafe Tank Motor Daemon
 
 [Service]
-ExecStart=/opt/tank/motorserial.py -a
+ExecStart=/opt/tank/pymotor/motorserial.py -a
 Type=simple
 Restart=always
 
