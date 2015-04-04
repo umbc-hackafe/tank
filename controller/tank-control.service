@@ -1,6 +1,5 @@
 [Unit]
 Description=Hackafe Tank Controller Daemon
-Wants=tank-motor.service
 After=tank-motor.service
 
 [Service]
