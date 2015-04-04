@@ -12,7 +12,7 @@ $(function() {
 
 	setInterval(function() {
 	    window.client.call("ping");
-	}, 500);
+	}, 750);
     });
 
     $("#passcode").focus();
