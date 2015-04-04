@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "teensy3/WProgram.h"
 
 #define bufferlength 10000
 #define serialbuffer 1000

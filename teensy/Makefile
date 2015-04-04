@@ -47,7 +47,7 @@ CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti
 CFLAGS =
 
 # linker options
-LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -Tmk20dx256.ld
+LDFLAGS = -Os -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -Tteensy3/mk20dx256.ld
 
 # additional libraries to link
 LIBS = -lm
@@ -70,7 +70,7 @@ OBJS := $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o)
 
 all: $(TARGET).hex
 
-$(TARGET).elf: $(OBJS) mk20dx256.ld
+$(TARGET).elf: $(OBJS) teensy3/mk20dx256.ld
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 %.hex: %.elf
