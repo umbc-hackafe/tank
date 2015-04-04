@@ -1,5 +1,5 @@
 from __future__ import division, print_function
-import sys, time, threading, json, os, subprocess
+import sys, time, threading, json, os, subprocess, httplib
 
 def imports():
     global cherrypy
@@ -33,7 +33,7 @@ def main(client, args):
     cherrypy.tools.websocket = ws4py.server.cherrypyserver.WebSocketTool()
 
     def timeout_thread(tank):
-        while not tank.terminated:
+        while not tank.terminated and not getattr(tank, 'stopnow', False):
             tank.check_timeout()
             time.sleep(MSG_TIMEOUT/2)
 
@@ -42,8 +42,8 @@ def main(client, args):
             if time.time() - self.last_received > MSG_TIMEOUT:
                 try:
                     client.halt()
-                except:
-                    print("a bad thing happened halting")
+                except httplib.CannotSendRequest, httplib.ResponseNotReady:
+                    pass
                 return False
             return True
 
@@ -76,10 +76,12 @@ def main(client, args):
         def opened(self):
             self.last_received = time.time()
             self.ping_waiter = threading.Thread(target=timeout_thread, args=(self,))
+            self.ping_waiter.daemon = True
             self.ping_waiter.start()
 
         def closed(self, code, reason=None):
             client.halt()
+            self.stopnow = True
 
     def espeak(text):
         es = subprocess.Popen(["espeak", "--stdout", text], stdout=subprocess.PIPE)
