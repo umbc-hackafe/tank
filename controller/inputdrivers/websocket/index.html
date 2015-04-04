@@ -45,7 +45,7 @@
       width: 4em;
       }
 
-      #access-denied-box {
+      .warning {
       color: #9a2015;
       }
 
@@ -109,7 +109,10 @@
       <div class="box hidden" id="access-granted-box">
 	Access Granted
       </div>
-      <div class="box hidden" id="access-denied-box">
+      <div class="box hidden warning" id="connection-lost">
+	<span id="connection-lost-text">Connection Lost</span>
+      </div>
+      <div class="box hidden warning" id="access-denied-box">
 	<span id="denied-text">Access Denied</span>
       </div>
       <div class="box hidden" id="control-box">

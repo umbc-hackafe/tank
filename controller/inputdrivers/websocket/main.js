@@ -1,5 +1,15 @@
 $(function() {
     window.client = new Client(location.host, location.port, "/ws", function() {
+	window.client.addOnClose(function() {
+	    $("#control-box").addClass("hidden");
+	    $("#connection-lost-box").removeClass("hidden");
+	});
+
+	window.client.addOnOpen(function() {
+	    $("#control-box").removeClass("hidden");
+	    $("#connection-lost-box").addClass("hidden");
+	});
+
 	setInterval(function() {
 	    window.client.call("ping");
 	}, 500);
