@@ -10,7 +10,7 @@ def imports():
     import ws4py.websocket
 
 FILES = {
-    "index": os.path.dirname(os.path.abspath(__file__), "websocket", "index.html"),
+    "index": os.path.join(os.path.dirname(os.path.abspath(__file__)), "websocket", "index.html"),
 }
 CACHE = {}
 MSG_TIMEOUT = 1.0
