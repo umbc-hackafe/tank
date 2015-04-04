@@ -40,15 +40,27 @@ $(function() {
     $(document).keydown(function(e) {
 	switch(e.which) {
 	case 37: // left
-	case 38: // up
-	case 39: // right
-	case 40: // down
-	    return;
-
-	case 87: // W
 	case 65: // A
-	case 83: // S
+	    window.left = true;
+	    drive();
+	    break;
+
+	case 38: // up
+	case 87: // W
+	    window.forward = true;
+	    drive();
+	    break;
+
+	case 39: // right
 	case 68: // D
+	    window.right = true;
+	    drive();
+	    break;
+
+	case 40: // down
+	case 83: // S
+	    window.back = true;
+	    drive();
 	    return;
 
 	case 48: // 0
@@ -83,10 +95,89 @@ $(function() {
 	//e.preventDefault();
     });
 
+    $(document).keyup(function(e) {
+	switch(e.which) {
+	case 37: // left
+	case 65: // A
+	    window.left = false;
+	    drive();
+	    break;
+
+	case 38: // up
+	case 87: // W
+	    window.forward = false;
+	    drive();
+	    break;
+
+	case 39: // right
+	case 68: // D
+	    window.right = false;
+	    drive();
+	    break;
+
+	case 40: // down
+	case 83: // S
+	    window.back = false;
+	    drive();
+	    return;
+
+	case 48: // 0
+	case 49: // 1
+	case 50: // 2
+	case 51: // 3
+	case 52: // 4
+	case 53: // 5
+	case 54: // 6
+	case 55: // 7
+	case 56: // 8
+	case 57: // 9
+	    return;
+
+	/*case 70: // F (button down)
+	    $("#turret-fire").click();
+	    break;
+
+	case 78: // N (button up)
+	    sound("beep2");
+	    break;
+
+	case 76: // L (keyswitch ON)
+	    sound("welcome");
+	    break;
+
+	case 85: // U (keyswitch OFF)
+	    sound("shutdown");
+	    break;
+	}*/
+
+	//e.preventDefault();
+    });
+
     $(document).click(function() {
 	sound("select7");
     });
 });
+
+function drive() {
+    var speed, steer;
+    if (window.forward) {
+	speed = 1;
+    } else if (window.back) {
+	speed = -1;
+    } else {
+	speed = 0;
+    }
+
+    if (window.left) {
+	steer = -1;
+    } else if (window.right) {
+	steer = 1;
+    } else {
+	steer = 0;
+    }
+
+    window.client.call("drive", {"args": [speed, steer]});
+}
 
 function countdown(time, min, cb) {
     speak(time);
