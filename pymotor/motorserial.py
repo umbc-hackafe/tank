@@ -6,6 +6,7 @@ import random
 import serial
 import sys
 import threading
+import time
 from xmlrpc import server as xrpcserve
 
 DEFAULT_SERIAL = "/dev/ttyACM0"
@@ -121,7 +122,14 @@ def rpc_timeout(event, tank):
 class TankSerial(object):
 
   def __init__(self, serial_port):
-    self.serial = serial.Serial(serial_port, 19200)
+    while True:
+      try:
+        self.serial = serial.Serial(serial_port, 19200)
+        break
+      except:
+        print("Serial port not found... trying again in 5s.")
+        time.sleep(5)
+
     self.serial_lock = threading.Lock()
 #    self.serial.write = print
     self.left_tread = Motor(LEFT_TREAD_ID, self.serial, self.serial_lock)
