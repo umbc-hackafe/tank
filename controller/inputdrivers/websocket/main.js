@@ -6,8 +6,10 @@ $(function() {
 	});
 
 	window.client.socket.addOnOpen(function() {
-	    $("#control-box").removeClass("hidden");
-	    $("#connection-lost-box").addClass("hidden");
+	    if ($("#auth-box").hasClass("hidden")) {
+		$("#control-box").removeClass("hidden");
+		$("#connection-lost-box").addClass("hidden");
+	    }
 	});
 
 	setInterval(function() {
