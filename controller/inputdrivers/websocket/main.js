@@ -150,7 +150,8 @@ $(function() {
 	    break;
 	}*/
 
-	//e.preventDefault();
+	    //e.preventDefault();
+	}
     });
 
     $(document).click(function() {
