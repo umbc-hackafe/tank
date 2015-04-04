@@ -84,8 +84,8 @@ def main(client, args):
             self.stopnow = True
 
     def espeak(text):
-        es = subprocess.Popen(["espeak", "--stdout", text], stdout=subprocess.PIPE)
-        ap = subprocess.Popen(["aplay", "-"], stdin=es.stdout, stdout=subprocess.PIPE)
+        es = subprocess.Popen(["/usr/bin/espeak", "--stdout", text], stdout=subprocess.PIPE)
+        ap = subprocess.Popen(["/usr/bin/aplay", "-"], stdin=es.stdout, stdout=subprocess.PIPE)
         es.stdout.close()
         ap.communicate()
 
@@ -100,7 +100,7 @@ def main(client, args):
 
         @cherrypy.expose
         def sound(self, name='menu5'):
-            threading.Thread(target=lambda n:subprocess.call(['aplay', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'websocket', 'sounds', n) + ".wav"]), args=(name,)).start()
+            threading.Thread(target=lambda n:subprocess.call(['/usr/bin/aplay', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'websocket', 'sounds', n) + ".wav"]), args=(name,)).start()
 
         @cherrypy.expose
         def ws(self):
