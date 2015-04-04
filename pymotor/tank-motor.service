@@ -1,0 +1,10 @@
+[Unit]
+Description=Hackafe Tank Motor Daemon
+
+[Service]
+ExecStart=/opt/tank/motorserial.py -s %I -a
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
