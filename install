@@ -1,0 +1,4 @@
+#!/bin/bash
+install -o root -g root -m 644 ./pymotor/tank-motor.service /usr/lib/systemd/system/tank-motor\@.service
+install -o root -g root -m 644 ./controller/tank-control.service /usr/lib/systemd/system/tank-control.service
+install -o root -g root -m 644 ./camera/tank-stream.service /usr/lib/systemd/system/tank-stream.service
