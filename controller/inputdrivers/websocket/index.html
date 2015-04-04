@@ -157,7 +157,7 @@
     <script type="text/javascript" src="./client.js"></script>
     <script type="text/javascript">
       $(function() {
-      window.client = new Client(location.host, location.port, "/ws", function(){
+      window.client = new Client("angel", 80, "/ws", function(){
         console.log("ok");
       });
       setInterval(function() {
