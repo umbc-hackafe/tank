@@ -1,18 +1,18 @@
 $(function() {
     window.client = new Client("angel", 80, "/ws", function() {
+	window.client.socket.addOnClose(function() {
+	    $("#control-box").addClass("hidden");
+	    $("#connection-lost-box").removeClass("hidden");
+	});
+
+	window.client.socket.addOnOpen(function() {
+	    $("#control-box").removeClass("hidden");
+	    $("#connection-lost-box").addClass("hidden");
+	});
+
 	setInterval(function() {
 	    window.client.call("ping");
 	}, 750);
-    });
-
-    window.client.addOnClose(function() {
-	$("#control-box").addClass("hidden");
-	$("#connection-lost-box").removeClass("hidden");
-    });
-
-    window.client.addOnOpen(function() {
-	$("#control-box").removeClass("hidden");
-	$("#connection-lost-box").addClass("hidden");
     });
 
     $("#passcode").focus();
