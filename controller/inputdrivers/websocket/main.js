@@ -65,12 +65,12 @@ $(function() {
 	    drive();
 	    return;
 
-	case 81:
+	case 81: // Q
 	    window.turretLeft = true;
 	    turret();
 	    return;
 
-	case 69:
+	case 69: // E
 	    window.turretRight = true;
 	    turret();
 	    return;
@@ -131,6 +131,16 @@ $(function() {
 	case 83: // S
 	    window.back = false;
 	    drive();
+	    return;
+
+	case 81: // Q
+	    window.turretLeft = false;
+	    turret();
+	    return;
+
+	case 69: // E
+	    window.turretRight = false;
+	    turret();
 	    return;
 
 	case 48: // 0
