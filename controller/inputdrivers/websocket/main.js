@@ -65,6 +65,16 @@ $(function() {
 	    drive();
 	    return;
 
+	case 81:
+	    window.turretLeft = true;
+	    turret();
+	    return;
+
+	case 69:
+	    window.turretRight = true;
+	    turret();
+	    return;
+
 	case 48: // 0
 	case 49: // 1
 	case 50: // 2
@@ -160,6 +170,19 @@ $(function() {
 	sound("select7");
     });
 });
+
+function turret() {
+    var speed;
+    if (window.turretLeft) {
+	speed = 1;
+    } else if (window.turretRight) {
+	speed = -1;
+    } else {
+	speed = 0;
+    }
+
+    window.client.call("spin", {"args": [speed]});
+}
 
 function drive() {
     var speed, steer;
