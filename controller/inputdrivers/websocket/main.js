@@ -75,6 +75,14 @@ $(function() {
 	    turret();
 	    return;
 
+	case 72: // H
+	    if ($("#control-box").hasClass("hidden")) {
+		$("#control-box").removeClass("hidden");
+	    } else {
+		$("#control-box").addClass("hidden");
+	    }
+	    return;
+
 	case 48: // 0
 	case 49: // 1
 	case 50: // 2
