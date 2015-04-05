@@ -214,7 +214,7 @@ class Motor(object):
 
   def set_speed(self, speed):
     speed = min(max(-1, speed), 1)
-    speed = int(speed * (2**7 - 1))
+    speed = int(speed * (2**8 - 1))
     command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big", signed=True)
     assert(len(command) == 5)
     with self.serial_lock:
