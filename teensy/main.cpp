@@ -1,239 +1,123 @@
 #include "teensy3/WProgram.h"
+#include "teensy3/core_pins.h"
+#include "teensy3/usb_serial.h"
 
-#define bufferlength 10000
-#define serialbuffer 1000
+#define serialbuffer 10
 
 // SERIAL COMMAND THINGS
 #define SET_SPEED_COMMAND 's'
 #define FREEWHEEL_COMMAND 'f'
 #define BRAKE_COMMAND 'b'
 #define RESUME_SPEED_COMMAND 'r'
+#define PING 'p'
 
 #define LEFT_TREAD_ID 'l'
 #define RIGHT_TREAD_ID 'r'
 #define TURRET_ID 't'
 #define GUN_ID 'g'
 
-#define PYROELECTRIC_SENSOR 'p'
-#define INFARED_SENSOR 'i'
-
-// PIN DEFINES
-#define PIN_TREAD_R1 3
-#define PIN_TREAD_R2 4
-#define PIN_EN_R1 7
-#define PIN_EN_R2 8
-
-#define PIN_TREAD_L1 5
-#define PIN_TREAD_L2 6
-#define PIN_EN_L1 9
-#define PIN_EN_L2 10
-
-#define PIN_TURRET1 11
-#define PIN_TURRET2 12
-
-// INTERNAL LIBRARY DEFINES
-#define TREAD_R 0
-#define TREAD_L 1
-#define TURRET 2
-#define GUN 3
-
-#define FORWARD 0
-#define REVERSE 1
-
-// OTHER DATA-Y THINGS
-#define PWM_MAX 255
-
-// hopefully
-#define ACTIVE LOW
-#define INACTIVE HIGH
-
 // the number of cycles to go through
 // before adding one to the ramp counter
-#define TICKS_PER_RAMP 1000000
-
-//create ring buffer for storing light values
-char ringbuffer[bufferlength] = {};
-long bufferstart = 0;
-long bufferend = 0;
+#define TICKS_PER_RAMP 10000
+#define TICKS_PER_PING 5000000
 
 //create straight buffer for storing serial data
 char serialdata[serialbuffer] = {};
 long serialend = 0;
 
-int packetPos = 0;
-int numLen = 6;
-int currentByte = 0;
+struct motor {
+    int pinA;
+    int pinB;
+    int pinEnA;
+    int pinEnB;
+    int setSpeed;
+    int setDir;
+    int curSpeed;
+    int curDir;
+    int freewheel;
+};
 
-int lastSpeedL = 0;
-int lastSpeedR = 0;
+struct motor treadr = {.pinA=3,  .pinB=4,  .pinEnA=7,  .pinEnB=8,  .setSpeed=0, .setDir=0, .curSpeed=0, .curDir=0, .freewheel=0};
+struct motor treadl = {.pinA=5,  .pinB=6,  .pinEnA=9,  .pinEnB=10, .setSpeed=0, .setDir=0, .curSpeed=0, .curDir=0, .freewheel=0};
+struct motor turret = {.pinA=11, .pinB=12, .pinEnA=0,  .pinEnB=0,  .setSpeed=0, .setDir=0, .curSpeed=0, .curDir=0, .freewheel=0};
 
-int targetSpeedL = 0;
-int targetSpeedR = 0;
-
-int curSpeedL = 0;
-int curSpeedR = 0;
-
-int dirL = 0;
-int dirR = 0;
-
-int directionL = 0;
-int directionR = 0;
-
-int reverseAt0R = 0;
-int reverseAt0L = 0;
-
-int rampTicks = 0;
-
-int stopped = 0;
-
-void sendNum(int data) {
-  ringbuffer[bufferend] = data;
-  bufferend++;
-  if (bufferend == bufferlength) {
-    bufferend = 0;
-  }
+void setSpeed(motor *motor, int speed, int dir) {
+    motor->setSpeed = speed;
+    motor->setDir = dir;
 }
 
-int getMotorId(int motorChar) {
-  switch(motorChar) {
-  case LEFT_TREAD_ID:
-    return TREAD_L;
-
-  case RIGHT_TREAD_ID:
-    return TREAD_R;
-
-  case TURRET_ID:
-    return TURRET;
-
-  case GUN_ID:
-    return GUN;
-  }
-}
-
-void setSpeed(int motor, int speed, int reverse) {
-  int pinA = 0;
-  int pinB = 0;
-  int pinEnA = 0;
-  int pinEnB = 0;
-
-  int pwmPin = 0;
-  int lowPin = 0;
-
-  switch(motor) {
-    case TREAD_R:
-      pinA = PIN_TREAD_R1;
-      pinB = PIN_TREAD_R2;
-      pinEnA = PIN_EN_R1;
-      pinEnB = PIN_EN_R2;
-      break;
-
-    case TREAD_L:
-      pinA = PIN_TREAD_L1;
-      pinB = PIN_TREAD_L2;
-      pinEnA = PIN_EN_L1;
-      pinEnB = PIN_EN_L2;
-      break;
-
-    case TURRET:
-      pinA = PIN_TURRET1;
-      pinB = PIN_TURRET2;
-      if (speed)
-        speed = PWM_MAX;
-      else
-        speed = 0;
-      break;
-
-    default:
-      return;
-  }
-
-  if (speed == 0) {
-    analogWrite(pinA, 0);
-    analogWrite(pinB, 0);
-    digitalWriteFast(pinEnA, HIGH);
-    digitalWriteFast(pinEnB, HIGH);
-  } else {
-    if (reverse) {
-      pwmPin = pinB;
-      lowPin = pinA;
+void update(motor *motor) {
+    if (motor->curDir != motor->setDir) {
+        if (motor->curSpeed > 0) {
+            motor->curSpeed--;
+        }
+        if (motor->curSpeed == 0) {
+            motor->curDir = motor->setDir;
+        }
     } else {
-      pwmPin = pinA;
-      lowPin = pinB;
+        if (motor->curSpeed < motor->setSpeed) {
+            motor->curSpeed++;
+        } else if (motor->curSpeed > motor->setSpeed) {
+            motor->curSpeed--;
+        }
     }
-    int pinA = 0;
-    int pinB = 0;
-    int pinEnA = 0;
-    int pinEnB = 0;
-
-    switch(motor) {
-      case TREAD_R:
-        pinA = PIN_TREAD_R1;
-        pinB = PIN_TREAD_R2;
-        pinEnA = PIN_EN_R1;
-        pinEnB = PIN_EN_R2;
+    
+    if (motor->curDir) {
+        analogWrite(motor->pinB, motor->curSpeed);
+        analogWrite(motor->pinA, 0);
+    } else {
+        analogWrite(motor->pinA, motor->curSpeed);
+        analogWrite(motor->pinB, 0);
     }
-    analogWrite(pwmPin, speed);
-      analogWrite(lowPin, 0);
-      digitalWriteFast(pinEnA, LOW);
-      digitalWriteFast(pinEnB, LOW);
-  }
+    digitalWriteFast(motor->pinEnA, !motor->freewheel);
+    digitalWriteFast(motor->pinEnB, !motor->freewheel);
 }
 
 void initialize() {
-  pinMode(PIN_TREAD_R1, OUTPUT);
-  pinMode(PIN_TREAD_R2, OUTPUT);
-  pinMode(PIN_TREAD_L1, OUTPUT);
-  pinMode(PIN_TREAD_L2, OUTPUT);
-
-  pinMode(PIN_EN_R1, OUTPUT);
-  pinMode(PIN_EN_R1, OUTPUT);
-  pinMode(PIN_EN_L1, OUTPUT);
-  pinMode(PIN_EN_L2, OUTPUT);
-
-  pinMode(PIN_TURRET1, OUTPUT);
-  pinMode(PIN_TURRET2, OUTPUT);
-
-  setSpeed(TREAD_R, 0, FORWARD);
-  setSpeed(TREAD_L, 0, FORWARD);
-  setSpeed(TURRET, 0, FORWARD);
+    pinMode(treadr.pinA, OUTPUT);
+    pinMode(treadr.pinB, OUTPUT);
+    pinMode(treadr.pinEnA, OUTPUT);
+    pinMode(treadr.pinEnB, OUTPUT);
+    
+    pinMode(treadl.pinA, OUTPUT);
+    pinMode(treadl.pinB, OUTPUT);
+    pinMode(treadl.pinEnA, OUTPUT);
+    pinMode(treadl.pinEnB, OUTPUT);
+    
+    pinMode(turret.pinA, OUTPUT);
+    pinMode(turret.pinB, OUTPUT);
+    pinMode(turret.pinEnA, OUTPUT);
+    pinMode(turret.pinEnB, OUTPUT);
 }
 
 extern "C" int main(void) {
   initialize();
 
   Serial.begin(9600);
-
+  
+  int rampTicks = 0;
+  int pingTicks = 0;
+  
   while (1==1) {
     rampTicks++;
+    pingTicks++;
 
-    if (!stopped && rampTicks == TICKS_PER_RAMP) {
-      rampTicks = 0;
-      if (curSpeedL < targetSpeedL)
-	curSpeedL++;
-
-      if (curSpeedL > targetSpeedL)
-	curSpeedL--;
-
-      if (curSpeedL == 0 && reverseAt0L) {
-	directionL = !directionL;
-	targetSpeedL = reverseAt0L;
-	reverseAt0L = 0;
-      }
-
-      if (curSpeedR < targetSpeedR)
-	curSpeedR++;
-
-      if (curSpeedR > targetSpeedR)
-	curSpeedR--;
-
-      if (curSpeedR == 0 && reverseAt0R) {
-	directionR = !directionR;
-	targetSpeedR = reverseAt0R;
-	reverseAt0R = 0;
-      }
-
-      setSpeed(TREAD_L, curSpeedL, directionL);
-      setSpeed(TREAD_R, curSpeedR, directionR);
+    if (rampTicks == TICKS_PER_RAMP) {
+        update(&treadr);
+        update(&treadl);
+        update(&turret);
+        rampTicks = 0;
+    } 
+    if (pingTicks == TICKS_PER_PING) {
+        treadr.setSpeed = 0;
+        treadr.curSpeed = 0;
+        treadr.freewheel = 0;
+        treadl.setSpeed = 0;
+        treadl.curSpeed = 0;
+        treadl.freewheel = 0;
+        turret.setSpeed = 0;
+        turret.curSpeed = 0;
+        turret.freewheel = 0;
     }
 
     if (Serial.available()) {
@@ -251,38 +135,29 @@ extern "C" int main(void) {
       int cmd = serialdata[1];
       int motor = serialdata[2];
       int data = serialdata[3];
-      int dir = FORWARD;
+      int dir = serialdata[4];
 
       switch(cmd) {
 	case SET_SPEED_COMMAND:
-	  if (data < 0) {
-	    data = -data;
-	    dir = REVERSE;
-	  }
-	  // set the crap to make it reverse maybe
-	  // blah blah blah
-	  //setSpeed(getMotorId(motor), data * 2, dir);
-	  break;
-
-	// this sets enable off and leaves speed
-	case FREEWHEEL_COMMAND:
-	  // write INACTIVE to EN pins
-	  // ramp to zero
-	  break;
-
-	// this sets speed to zero immediately
-	case BRAKE_COMMAND:
-	  // set speed to zero
-	  // set target speed to zero
-	  // write ACTIVE to EN pins
-	  break;
-
-	// this sets the speed to whatever it was
-	// before BRAKE or FREEWHEEL commands
-	case RESUME_SPEED_COMMAND:
-	  // set target speed to last speed
-	  // write to EN pin
-	  break;
+            switch(motor) {
+                case RIGHT_TREAD_ID:
+                    setSpeed(&treadr, data, dir);
+                    break;
+                case LEFT_TREAD_ID:
+                    setSpeed(&treadl, data, dir);
+                    break;
+                case TURRET_ID:
+                    setSpeed(&turret, data, dir);
+                    break;
+                default:
+                    setSpeed(&treadr, data, dir);
+                    break;
+            }
+            pingTicks = 0;
+            break;
+        case PING:
+            pingTicks = 0;
+            break;
       }
     }
   }
