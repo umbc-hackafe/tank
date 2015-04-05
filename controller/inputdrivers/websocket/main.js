@@ -78,8 +78,10 @@ $(function() {
 	case 72: // H
 	    if ($("#control-box").hasClass("hidden")) {
 		$("#control-box").removeClass("hidden");
+		$("#background-text").removeClass("hidden");
 	    } else {
 		$("#control-box").addClass("hidden");
+		$("#background-text").addClass("hidden");
 	    }
 	    return;
 
