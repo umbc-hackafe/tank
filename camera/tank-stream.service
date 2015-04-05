@@ -2,7 +2,7 @@
 Description=Hackafe Tank video streaming
 
 [Service]
-ExecStart=/usr/bin/mjpg_streamer -i "/usr/lib/input_uvc.so -n -f 30 -r 1024x768" -o "/usr/lib/output_http.so -w /srv/http/mjpg-streamer"
+ExecStart=/usr/bin/mjpg_streamer -i "/usr/lib/input_uvc.so -n -f 30 -r 480x320" -o "/usr/lib/output_http.so -w /srv/http/mjpg-streamer"
 Type=simple
 Restart=always
 
