@@ -216,10 +216,9 @@ class Motor(object):
     speed = min(max(-1, speed), 1)
     speed = int(abs(speed) * (2**8 - 1))
     direction = 1 if speed >= 0 else 0
-    print("Sending speed {} and dir {}".format(speed, direction))
     command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big") + direction.to_bytes(1, "big")
 
-    assert(len(command) == 5)
+    assert(len(command) == 6)
     with self.serial_lock:
       self.serial.write(command)
     print("Set Speed of motor", self.serial_id, "to:", speed)
