@@ -190,6 +190,10 @@ class TankSerial(object):
     self.left_tread.set_speed(left_motor)
     self.right_tread.set_speed(right_motor)
 
+  def spin(self, speed):
+    speed = min(max(-1, speed), 1)
+    self.turret.set_speed(speed)
+
   def center_turret(self):
     with self.ir_lock:
       event = self.ir_sensors['c']
