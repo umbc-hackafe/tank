@@ -214,8 +214,8 @@ class Motor(object):
 
   def set_speed(self, speed):
     speed = min(max(-1, speed), 1)
+    direction = 0 if speed >= 0 else 1
     speed = int(abs(speed) * (2**8 - 1))
-    direction = 1 if speed >= 0 else 0
     command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big") + direction.to_bytes(1, "big")
 
     assert(len(command) == 6)
