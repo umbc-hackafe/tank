@@ -41,7 +41,10 @@ class AutoMulticast(object):
         return AutoMulticast(*[getattr(item, name) for item in self.items])
 
     def __call__(self, *args, **kwargs):
-        return AutoMulticast(*[item(*args, **kwargs) for item in self.items])
+        try:
+            return AutoMulticast(*[item(*args, **kwargs) for item in self.items])
+        except:
+            return None
 
 class ClientWrapper(AutoMulticast):
     def __init__(self, *args):
