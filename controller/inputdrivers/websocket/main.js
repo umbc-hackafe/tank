@@ -1,5 +1,5 @@
 $(function() {
-    window.client = new Client("angel", 80, "/ws", function() {
+    window.client = new Client(location.hostname, location.port ? location.port : 80, "/ws", function() {
 	window.client.socket.addOnClose(function() {
 	    $("#control-box").addClass("hidden");
 	    $("#connection-lost-box").removeClass("hidden");
@@ -243,7 +243,8 @@ function auth() {
 	setTimeout(function() {
 	    $("#access-granted-box").addClass('hidden');
 	    $("#control-box").removeClass('hidden');
-	    $(document.body).css('background-image', 'url(http://angel:8080/?action=stream)');
+	    $(document.body).css('background-image', 'url(http://' + location.hostname + ':8080/?action=stream)');
+	    $(document.body).css('background-size', '60%');
 	    $(document.body).css('text-align', 'right');
 	    $(".container").css('text-align', 'right');
 	}, 3000);
