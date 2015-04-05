@@ -70,6 +70,8 @@ def main(argv):
       ping_event = threading.Event()
       def ping():
         ping_event.set()
+        tank.ping()
+
       server.register_function(ping)
       rpc_timeout_thread = threading.Thread(target=rpc_timeout, args=(ping_event, tank), daemon=True)
       rpc_timeout_thread.start()
@@ -153,6 +155,11 @@ class TankSerial(object):
 
   def is_active(self):
     return self.serial.isOpen()
+
+  def ping(self):
+    with self.serial_lock:
+      command = SENTINEL + b"pppp"
+      self.serial.write(command)
 
   def sensor_monitor(self):
     while self.serial.isOpen():
