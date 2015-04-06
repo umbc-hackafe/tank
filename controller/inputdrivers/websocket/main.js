@@ -146,6 +146,10 @@ $(function() {
 	    }
 	    return;
 
+	case 32: // Space
+	    window.client.call("halt");
+	    return;
+
 	case 48: // 0
 	case 49: // 1
 	case 50: // 2
