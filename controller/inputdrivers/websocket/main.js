@@ -39,6 +39,67 @@ $(function() {
 	speak("Self-destruct sequence initiated.", function(){countdown(30, 1, function(){speak("Self-destruct aborted.")});});
     });
 
+    $("#treads-left").mousedown(function() {
+	window.left = true;
+	drive();
+    });
+
+    $("#treads-forward").mousedown(function() {
+	window.forward = true;
+	drive();
+    });
+
+    $("#treads-right").mousedown(function() {
+	window.right = true;
+	drive();
+    });
+
+    $("#treads-reverse").mousedown(function() {
+	window.back = true;
+	drive();
+    });
+
+    $("#turret-ccw").mousedown(function() {
+	window.turretLeft = true;
+	turret();
+    });
+
+    $("#turret-cw").mousedown(function() {
+	window.turretRight = true;
+	turret();
+    });
+
+    // Mouse ups
+    $("#treads-left").mouseup(function() {
+	window.left = false;
+	drive();
+    });
+
+    $("#treads-forward").mouseup(function() {
+	window.forward = false;
+	drive();
+    });
+
+    $("#treads-right").mouseup(function() {
+	window.right = false;
+	drive();
+    });
+
+    $("#treads-reverse").mouseup(function() {
+	window.back = false;
+	drive();
+    });
+
+    $("#turret-ccw").mouseup(function() {
+	window.turretLeft = false;
+	turret();
+    });
+
+    $("#turret-cw").mouseup(function() {
+	window.turretRight = false;
+	turret();
+    });
+
     $(document).keydown(function(e) {
 	switch(e.which) {
 	case 37: // left
@@ -193,9 +254,13 @@ $(function() {
 
 function turret() {
     var speed;
+
+    $("#turret-ccw, #turret-cw").removeClass("redalert");
     if (window.turretLeft) {
+	$("#turret-ccw").addClass("redalert");
 	speed = 1;
     } else if (window.turretRight) {
+	$("#turret-cw").addClass("redalert");
 	speed = -1;
     } else {
 	speed = 0;
@@ -206,17 +271,22 @@ function turret() {
 
 function drive() {
     var speed, steer;
+    $("#tread-controls input").removeClass("redalert");
     if (window.forward) {
 	speed = 1;
+	$("#treads-forward").addClass("redalert");
     } else if (window.back) {
+	$("#treads-reverse").addClass("redalert");
 	speed = -1;
     } else {
 	speed = 0;
     }
 
     if (window.left) {
+	$("#treads-left").addClass("redalert");
 	steer = -1;
     } else if (window.right) {
+	$("#treads-right").addClass("redalert");
 	steer = 1;
     } else {
 	steer = 0;
