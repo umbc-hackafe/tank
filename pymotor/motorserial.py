@@ -26,8 +26,22 @@ GUN_ID = b"g"
 PYROELECTRIC_SENSOR = b"p"
 INFARED_SENSOR = b"i"
 
+# Board pin number, NOT BCM ID
+GUN_PIN = 3
+
+gpio_setup = False
+
+def setup_gpio():
+  import RPi.GPIO as gpio
+  gpio.setmode(gpio.BOARD)
+  gpio.setwarnings(False)
+  # Don't shoot as soon as we set this up!
+  gpio.setup(GUN_PIN, gpio.OUT, initial=gpio.HIGH)
+
+  global gpio_setup
+  gpio_setup = True
+
 def monkeypatch_serial():
-  import time
   class FakeSerial:
     def __init__(self, *args, **kwargs):
       pass
@@ -56,6 +70,7 @@ def main(argv):
   parser.add_argument("--audio", "-a", help="Should audio be played by this instance.", action="store_true")
   parser.add_argument("--no-ping", "-n", action="store_false")
   parser.add_argument("--dummy-serial", "-d", action="store_true")
+  parser.add_argument("--no-gpio", "-g", action="store_true")
   args = parser.parse_args()
 
   if args.dummy_serial:
@@ -63,6 +78,9 @@ def main(argv):
 
   server = xrpcserve.SimpleXMLRPCServer(("localhost", args.port), requestHandler=RequestHandler, allow_none=True)
   server.register_introspection_functions()
+
+  if not args.no_gpio:
+    setup_gpio()
 
   with TankSerial(args.serial_port) as tank:
     # Handle the pinging
@@ -181,6 +199,18 @@ class TankSerial(object):
             self.ir_sensors[identifier].clear()
       else:
         print("Invalid sensor type:", sensor_type)
+
+  def fire(self, stop=False, continuous=False):
+    if gpio_setup:
+      if stop:
+        gpio.output(GUN_PIN, gpio.HIGH)
+      else:
+        gpio.output(GUN_PIN, gpio.LOW)
+        if not continuous:
+          time.sleep(.1)
+          gpio.output(GUN_PIN, gpio.HIGH)
+    else:
+      print("Not firing -- no GPIO")
 
   def drive(self, speed, steer):
     speed = min(max(-1, speed), 1)
