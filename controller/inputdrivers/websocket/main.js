@@ -1,4 +1,5 @@
 $(function() {
+    window.refresh = false;
     window.client = new Client(location.hostname, location.port ? location.port : 80, "/ws", function() {
 	window.client.socket.addOnClose(function() {
 	    $("#control-box").addClass("hidden");
@@ -16,6 +17,12 @@ $(function() {
 	    window.client.call("ping");
 	}, 750);
     });
+
+    setInterval(function() {
+	if (window.refresh) {
+	    $(document.body).css('background-image', 'url(http://' + location.hostname + ':8080/?action=stream&_nonce=' + Math.random() + ')');
+	}
+    }, 15000);
 
     $("#passcode").focus();
 
@@ -331,6 +338,7 @@ function auth() {
 	    $(document.body).css('background-size', '60%');
 	    $(document.body).css('text-align', 'right');
 	    $(".container").css('text-align', 'right');
+	    window.refresh = true;
 	}, 3000);
     } else {
 	$("#auth-box").addClass('hidden');
