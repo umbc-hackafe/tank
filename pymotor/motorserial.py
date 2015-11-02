@@ -268,7 +268,7 @@ class TankSerial(object):
     # linear tread velocity, then we could use that here to try to rotate or move at
     # specific speeds instead of just proportions of maximum velocity.
 
-    divisor = abs(speed) + abs(steer) if abs(speed) + abs(steer) > 1.0 else 1.0
+    divisor = abs(speed) + abs(steer) if abs(speed) + abs(steer) > 1 else 1
 
     left_motor = clamp((speed + steer) / divisor, -1, 1)
     right_motor = clamp((speed - steer) / divisor, -1, 1)
@@ -302,7 +302,7 @@ class Motor(object):
     self.serial_lock = serial_lock
 
   def set_speed(self, speed):
-    speed = min(max(-1, speed), 1)
+    speed = clamp(speed, -1, 1)
     direction = 0 if speed >= 0 else 1
     speed = int(abs(speed) * (2**8 - 1))
     command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big") + direction.to_bytes(1, "big")
