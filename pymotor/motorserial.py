@@ -62,6 +62,9 @@ def monkeypatch_serial():
 
   serial.Serial = FakeSerial
 
+def clamp(num, minimum, maximum):
+  return min(max(num, minimum), maximum)
+
 def main(argv):
   parser = argparse.ArgumentParser()
   parser.add_argument("--serial-port", "-s", help="The path to the serial port to connect to", type=str, nargs="?",
@@ -106,7 +109,7 @@ def main(argv):
     # Run Audio
     audio_handler = AudioHandler(args.audio)
     server.register_function(audio_handler.play_sound)
-    
+
     server.serve_forever()
 
 
@@ -137,7 +140,7 @@ def rpc_timeout(event, tank):
       tank.halt()
     else:
       event.clear()
-  
+
 
 class TankSerial(object):
 
@@ -213,10 +216,62 @@ class TankSerial(object):
       print("Not firing -- no GPIO")
 
   def drive(self, speed, steer):
-    speed = min(max(-1, speed), 1)
-    
-    left_motor = min(max(speed + steer, -1), 1)
-    right_motor = min(max(speed - steer, -1), 1)
+    #####################################
+    ### DIFFERENTIAL DRIVE KINEMATICS ###
+    #####################################
+    #
+    # [[x]    [[(r * φ_1) / 2 + (r * φ_2) / 2]
+    #  [θ]] =  [(r * φ_1) / 2l - (r * φ_2) / 2l]]
+    #
+    # - x: the linear velocity (use m/s)
+    # - θ: the rotational velocity (use radians/s)
+    # - r: the radius of the wheel (use m)
+    # - φ: the rotational velocty of the wheel (use radians/s)
+    #    - φ_1 is the left wheel
+    #    - φ_2 is the right wheel
+    # - l: the distance between the wheels (use m)
+    #
+    # - r * φ_n is the linear velocity of the wheel on the surface, assuming φ_n is using
+    #   radians.
+    #
+    #
+    # Not knowing r, l, or the min/max values of φ, we cannot do calculations to drive at
+    # *specific* linear or rotational velocities.
+    #
+    # However, we can instead use normalized values. We assume that the wheel speed must
+    # be between -1 and 1, where -1 is full reverse, and 1 is full forward. So we will
+    # replace r * φ_1 with 'a', and r * φ_2 with 'b', where -1 <= a,b <= 1. We can then
+    # solve for normalized x and θ, and get: -1 <= x-θ <= 1, -1 <= x+θ <= 1. These
+    # inequalities form a diamond around the origin, which outlines the set of possible
+    # combinations of linear and rotational velocity which are acheiveable. (Equivalently,
+    # |x|+|θ|<=1)
+    #
+    # The inverse kinematics of differential drive is just the solution for r * φ_n for
+    # each wheel, or in our case (without measurements), the solution for a and b, is:
+    #
+    # r/2 * [[φ_1]    [[(x + l * θ) / 2]
+    #        [φ_2]] =  [(x - l * θ) / 2]]
+    #
+    # [[φ_1]    [[(x + l * θ) / r]
+    #  [φ_2]] =  [(x - l * θ) / r]]
+    #
+    # [[a]    [[x + θ]
+    #  [b]] =  [x - θ]]
+    #
+    #
+    # So to drive our tank with a certain forward/turn ammount, we first need to limit the
+    # speed and steer to sum and subtract within [1,-1], then combine them to get the
+    # motor drive speeds. -- Halariously, we apparently got this right the first time.
+    #
+    # If we knew either the radius of the driving wheels, tread separation, and how motor
+    # power level affected rotational velocity, or just how motor power level affected
+    # linear tread velocity, then we could use that here to try to rotate or move at
+    # specific speeds instead of just proportions of maximum velocity.
+
+    divisor = abs(speed) + abs(steer) if abs(speed) + abs(steer) > 1.0 else 1.0
+
+    left_motor = clamp((speed + steer) / divisor, -1, 1)
+    right_motor = clamp((speed - steer) / divisor, -1, 1)
     self.left_tread.set_speed(left_motor)
     self.right_tread.set_speed(right_motor)
 
@@ -238,7 +293,7 @@ class TankSerial(object):
     self.right_tread.brake()
     self.turret.brake()
     self.gun.brake()
-    
+
 
 class Motor(object):
   def __init__(self, serial_id, serial, serial_lock):
@@ -269,14 +324,14 @@ class Motor(object):
     assert(len(command) == 5)
     self.serial.write(command)
     print("Now braking on motor", self.serial_id)
-    
+
   def resume(self):
     command = RESUME_SPEED_COMMAND + self.serial_id + b"\x00"
     assert(len(command) == 5)
     with self.serial_lock:
       self.serial.write(command)
     print("Resuming old speed on motor", self.serial_id)
-    
+
 
 if __name__ == "__main__":
   main(sys.argv)
