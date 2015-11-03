@@ -106,7 +106,7 @@ def main(argv):
     # Run Audio
     audio_handler = AudioHandler(args.audio)
     server.register_function(audio_handler.play_sound)
-    
+
     server.serve_forever()
 
 
@@ -137,7 +137,7 @@ def rpc_timeout(event, tank):
       tank.halt()
     else:
       event.clear()
-  
+
 
 class TankSerial(object):
 
@@ -214,7 +214,7 @@ class TankSerial(object):
 
   def drive(self, speed, steer):
     speed = min(max(-1, speed), 1)
-    
+
     left_motor = min(max(speed + steer, -1), 1)
     right_motor = min(max(speed - steer, -1), 1)
     self.left_tread.set_speed(left_motor)
@@ -238,7 +238,7 @@ class TankSerial(object):
     self.right_tread.brake()
     self.turret.brake()
     self.gun.brake()
-    
+
 
 class Motor(object):
   def __init__(self, serial_id, serial, serial_lock):
@@ -249,10 +249,10 @@ class Motor(object):
   def set_speed(self, speed):
     speed = min(max(-1, speed), 1)
     direction = 0 if speed >= 0 else 1
-    speed = int(abs(speed) * (2**8 - 1))
-    command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(1, "big") + direction.to_bytes(1, "big")
+    speed = int(abs(speed) * (2**16 - 1))
+    command = SET_SPEED_COMMAND + self.serial_id + speed.to_bytes(2, "little") + direction.to_bytes(1, "little")
 
-    assert(len(command) == 6)
+    assert(len(command) == 7)
     with self.serial_lock:
       self.serial.write(command)
     print("Set Speed of motor", self.serial_id, "to:", speed)
@@ -269,14 +269,14 @@ class Motor(object):
     assert(len(command) == 5)
     self.serial.write(command)
     print("Now braking on motor", self.serial_id)
-    
+
   def resume(self):
     command = RESUME_SPEED_COMMAND + self.serial_id + b"\x00"
     assert(len(command) == 5)
     with self.serial_lock:
       self.serial.write(command)
     print("Resuming old speed on motor", self.serial_id)
-    
+
 
 if __name__ == "__main__":
   main(sys.argv)
